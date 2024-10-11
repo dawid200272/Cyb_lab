@@ -1,7 +1,22 @@
+using Cyb_lab.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+#region DB Related
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+
+builder.Services.AddDbContext<AppDBContext>(options =>
+	options.UseSqlite(connectionString));
+#endregion
+
+builder.Services.AddAuthorization();
+builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+	.AddEntityFrameworkStores<AppDBContext>();
 
 var app = builder.Build();
 
