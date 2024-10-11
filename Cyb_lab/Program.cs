@@ -1,4 +1,5 @@
 using Cyb_lab.Data;
+using Cyb_lab.PasswordHashers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,8 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
 	.AddEntityFrameworkStores<AppDBContext>();
+
+builder.Services.AddTransient<IPasswordHasher<IdentityUser>, BCryptPasswordHasher<IdentityUser>>();
 
 builder.Services.AddRazorPages();
 
