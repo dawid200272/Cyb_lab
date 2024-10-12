@@ -18,7 +18,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.6" />
-    <Using Include="BCrypt.Net.BCrypt" Alias="BC"/>
+    <Using Include="BCrypt.Net.BCrypt" Alias="BC" />
   </ItemGroup>
 
 </Project>
