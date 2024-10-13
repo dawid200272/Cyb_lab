@@ -13,17 +13,24 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 
 builder.Services.AddDbContext<AppDBContext>(options =>
 	options.UseSqlite(connectionString));
-
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<AppDBContext>();
 #endregion
 
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+	.AddRoles<IdentityRole>()
 	.AddEntityFrameworkStores<AppDBContext>();
 
 builder.Services.AddTransient<IPasswordHasher<IdentityUser>, BCryptPasswordHasher<IdentityUser>>();
 
 builder.Services.AddRazorPages();
+
+#region Roles and Policies
+builder.Services.AddAuthorizationBuilder()
+	.AddPolicy(UserRoles.Administrator.ToString(), policy =>
+		policy.RequireRole(UserRoles.Administrator.ToString()))
+	.AddPolicy(UserRoles.User.ToString(), policy =>
+	policy.RequireRole(UserRoles.User.ToString()));
+#endregion
 
 var app = builder.Build();
 
@@ -48,4 +55,77 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
+CreateDbRolesIfNotExist(app);
+CreateAdminAccountIfNotExist(app);
+
 app.Run();
+
+static async void CreateDbRolesIfNotExist(IHost host)
+{
+	using var scope = host.Services.CreateScope();
+
+	var services = scope.ServiceProvider;
+
+	var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+	var roleEnumValues = Enum.GetValues<UserRoles>();
+
+	try
+	{
+		foreach (var role in roleEnumValues)
+		{
+			if (!await roleManager.RoleExistsAsync(role.ToString()))
+			{
+				await roleManager.CreateAsync(new IdentityRole(role.ToString()));
+			}
+		}
+	}
+	catch (Exception ex)
+	{
+		//var logger = services.GetRequiredService<ILogger>();
+		//logger.LogError(ex, "An error occurred during creating roles in DB.");
+	}
+}
+
+static async void CreateAdminAccountIfNotExist(IHost host)
+{
+	const string AdminAccountName = "ADMIN";
+	const string DefaultAdminPass = "Admin1@";
+
+	using var scope = host.Services.CreateScope();
+
+	var services = scope.ServiceProvider;
+
+	var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+
+	try
+	{
+		if (await userManager.FindByNameAsync(AdminAccountName) is null)
+		{
+			var adminUser = new IdentityUser(AdminAccountName);
+
+			var result = await userManager.CreateAsync(adminUser, DefaultAdminPass);
+
+			try
+			{
+				await userManager.AddToRoleAsync(adminUser, UserRoles.Administrator.ToString());
+			}
+			catch (Exception ex)
+			{
+				//var logger = services.GetRequiredService<ILogger>();
+				//logger.LogError(ex, "An error occurred during adding admin account to admin role.");
+			}
+        }
+	}
+	catch (Exception ex)
+	{
+		//var logger = services.GetRequiredService<ILogger>();
+		//logger.LogError(ex, "An error occurred during creating admin account in DB.");
+	}
+}
+
+public enum UserRoles
+{
+	Administrator,
+	User
+}
