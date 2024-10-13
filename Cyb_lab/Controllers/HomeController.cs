@@ -12,9 +12,14 @@ public class HomeController : Controller
 		_logger = logger;
 	}
 
-	public IActionResult Index()
+	public IActionResult Index(bool isLogedIn = false)
 	{
-		return View();
+		if (isLogedIn)
+		{
+			return View();
+		}
+
+		return RedirectToAction(nameof(AccountController.Index), "Account");
 	}
 
 	public IActionResult Privacy()
