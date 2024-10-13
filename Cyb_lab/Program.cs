@@ -16,7 +16,16 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 #endregion
 
 builder.Services.AddAuthorization();
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+builder.Services.AddIdentityApiEndpoints<IdentityUser>(options =>
+	{
+		// Password settings
+		options.Password.RequiredLength = 14;
+		options.Password.RequiredUniqueChars = 0;
+		options.Password.RequireNonAlphanumeric = false;
+		options.Password.RequireLowercase = false;
+		options.Password.RequireUppercase = false;
+		options.Password.RequireDigit = true;
+	})
 	.AddRoles<IdentityRole>()
 	.AddEntityFrameworkStores<AppDBContext>();
 
@@ -115,7 +124,7 @@ static async void CreateAdminAccountIfNotExist(IHost host)
 				//var logger = services.GetRequiredService<ILogger>();
 				//logger.LogError(ex, "An error occurred during adding admin account to admin role.");
 			}
-        }
+		}
 	}
 	catch (Exception ex)
 	{
