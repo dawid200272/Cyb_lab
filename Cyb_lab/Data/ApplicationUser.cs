@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
 
-namespace Cyb_lab.Data
+namespace Cyb_lab.Data;
+
+public class ApplicationUser : IdentityUser
 {
-    public class ApplicationUser : IdentityUser
-    {
-        public string UserCreatedUserName { get; set; }
-    }
+	public bool FirstLogin { get; set; } = true;
+
+	public ApplicationUser() : base() { }
+
+	public ApplicationUser(string userName) : base(userName)
+	{
+	}
 }

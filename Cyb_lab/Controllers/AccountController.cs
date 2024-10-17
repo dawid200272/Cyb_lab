@@ -1,4 +1,5 @@
-﻿using Cyb_lab.ViewModels;
+﻿using Cyb_lab.Data;
+using Cyb_lab.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,11 +9,11 @@ namespace Cyb_lab.Controllers;
 [Authorize]
 public class AccountController : Controller
 {
-	private readonly SignInManager<IdentityUser> _signInManager;
-	private readonly UserManager<IdentityUser> _userManager;
+	private readonly SignInManager<ApplicationUser> _signInManager;
+	private readonly UserManager<ApplicationUser> _userManager;
 
-	public AccountController(SignInManager<IdentityUser> signInManager,
-		UserManager<IdentityUser> userManager)
+	public AccountController(SignInManager<ApplicationUser> signInManager,
+		UserManager<ApplicationUser> userManager)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
@@ -51,6 +52,13 @@ public class AccountController : Controller
 
 		if (result.Succeeded)
 		{
+			var user = await _userManager.GetUserAsync(User);
+
+			if (user!.FirstLogin)
+			{
+				return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
+			}
+
 			return RedirectToAction(nameof(HomeController.Index), "Home");
 		}
 		if (result.IsLockedOut)
@@ -105,6 +113,13 @@ public class AccountController : Controller
 		await _signInManager.RefreshSignInAsync(user);
 
 		// TODO: add status message
+
+		if (user.FirstLogin)
+		{
+			user.FirstLogin = false;
+
+			var result = await _userManager.UpdateAsync(user);
+		}
 
 		return RedirectToAction(nameof(HomeController.Index), "Home");
 	}

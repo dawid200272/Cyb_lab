@@ -16,7 +16,7 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 #endregion
 
 builder.Services.AddAuthorization();
-builder.Services.AddIdentityApiEndpoints<IdentityUser>(options =>
+builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
 	{
 		// Password settings
 		options.Password.RequiredLength = 14;
@@ -29,7 +29,7 @@ builder.Services.AddIdentityApiEndpoints<IdentityUser>(options =>
 	.AddRoles<IdentityRole>()
 	.AddEntityFrameworkStores<AppDBContext>();
 
-builder.Services.AddTransient<IPasswordHasher<IdentityUser>, BCryptPasswordHasher<IdentityUser>>();
+builder.Services.AddTransient<IPasswordHasher<ApplicationUser>, BCryptPasswordHasher<ApplicationUser>>();
 
 builder.Services.AddRazorPages();
 
@@ -105,13 +105,13 @@ static async void CreateAdminAccountIfNotExist(IHost host)
 
 	var services = scope.ServiceProvider;
 
-	var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+	var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
 	try
 	{
 		if (await userManager.FindByNameAsync(AdminAccountName) is null)
 		{
-			var adminUser = new IdentityUser(AdminAccountName);
+			var adminUser = new ApplicationUser(AdminAccountName);
 
 			var result = await userManager.CreateAsync(adminUser, DefaultAdminPass);
 

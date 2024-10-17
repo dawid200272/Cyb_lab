@@ -1,3 +1,4 @@
+using Cyb_lab.Data;
 using Cyb_lab.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -8,9 +9,9 @@ namespace Cyb_lab.Controllers;
 [Authorize("Administrator")]
 public class AdminController : Controller
 {
-	private readonly UserManager<IdentityUser> _userManager;
+	private readonly UserManager<ApplicationUser> _userManager;
 
-	public AdminController(UserManager<IdentityUser> userManager)
+	public AdminController(UserManager<ApplicationUser> userManager)
 	{
 		_userManager = userManager;
 	}
@@ -34,7 +35,7 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
-		var newUser = new IdentityUser(viewModel.UserName);
+		var newUser = new ApplicationUser(viewModel.UserName);
 
 		var result = await _userManager.CreateAsync(newUser, viewModel.Password);
 
