@@ -54,7 +54,13 @@ public class AccountController : Controller
 		{
 			var user = await _userManager.GetUserAsync(User);
 
-			if (user!.FirstLogin)
+    //        if (user.Disabled)
+    //        {
+    //            ModelState.AddModelError(string.Empty, "Account is disabled");
+				//return View(viewModel);
+    //        }
+
+            if (user!.FirstLogin)
 			{
 				return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
 			}
