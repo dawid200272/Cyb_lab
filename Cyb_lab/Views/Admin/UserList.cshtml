@@ -1,6 +1,19 @@
-﻿@{
+﻿@using Cyb_lab.ViewModels
+@{
     ViewData["Title"] = "User List";
 }
 
-<div class="text-center">
+@model List<SimpleUserViewModel>
+
+<div>
+    <a asp-controller="Admin" asp-action="Panel">Back</a><br />
+    List of users
+    @foreach (var item in Model)
+    {
+        <p>
+            User: @item.Name 
+            <a asp-controller="Admin" asp-action="UserDetails" asp-route-id="@item.Id">Details</a>
+        </p>
+    }
+    <a asp-controller="Admin" asp-action="AddUser">Add User</a>
 </div>

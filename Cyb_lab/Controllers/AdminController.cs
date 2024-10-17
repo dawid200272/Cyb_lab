@@ -16,12 +16,46 @@ public class AdminController : Controller
 		_userManager = userManager;
 	}
 
-	// add a new user account (with role 'User')
-	// change password policy options
-	// browse list of user accounts
-	// ...
+    public IActionResult Panel()
+    {
+        return View();
+    }
 
-	[HttpGet]
+    public IActionResult UserList()
+	{
+		var tempUserList = _userManager.Users.ToList();
+
+		var userList = new List<SimpleUserViewModel>();
+		foreach (var item in tempUserList)
+		{
+			userList.Add(new SimpleUserViewModel()
+			{
+				Id = item.Id,
+				Name = item.UserName
+			});
+        }
+
+		return View(userList);
+	}
+    public IActionResult UserDetails()
+    {
+		// get user by id
+		// how do i get password from this
+        return View();
+    }
+
+    public IActionResult PasswordPolicy()
+    {
+        return View();
+    }
+
+
+    // add a new user account (with role 'User')
+    // change password policy options
+    // browse list of user accounts
+    // ...
+
+    [HttpGet]
 	public IActionResult AddUser()
 	{
 		return View();

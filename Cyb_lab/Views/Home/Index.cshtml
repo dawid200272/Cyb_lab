@@ -3,6 +3,13 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Main page</h1>
+    
+    @* Only user with admin role sees this *@
+    @if (User.IsInRole("Administrator"))
+    {
+        <h2>Admin</h2>
+        <a asp-controller="Admin" asp-action="Panel">Admin Panel</a>
+        @* open admin panel here  *@
+    }
 </div>
