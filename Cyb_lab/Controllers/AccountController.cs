@@ -65,6 +65,12 @@ public class AccountController : Controller
 				return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
 			}
 
+			// add date to compare, it'll be in password policy somewhere
+			if (user.LastPasswordChangeDate >= DateTime.UtcNow) 
+            {
+                return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
+            }
+
 			return RedirectToAction(nameof(HomeController.Index), "Home");
 		}
 		if (result.IsLockedOut)
@@ -115,6 +121,8 @@ public class AccountController : Controller
 
 			return View(viewModel);
 		}
+
+		user.LastPasswordChangeDate = DateTime.UtcNow;
 
 		await _signInManager.RefreshSignInAsync(user);
 

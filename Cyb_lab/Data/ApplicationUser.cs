@@ -4,6 +4,7 @@ namespace Cyb_lab.Data;
 
 public class ApplicationUser : IdentityUser
 {
+	public DateTime LastPasswordChangeDate { get; set; }
 	public bool FirstLogin { get; set; } = true;
 	public bool Disabled { get; set; } = false;
 
