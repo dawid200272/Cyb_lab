@@ -1,6 +1,13 @@
-﻿@{
+﻿@using Cyb_lab.ViewModels
+@{
     ViewData["Title"] = "User Details";
 }
 
+@model UserDetailsViewModel
+
 <div>
+    <p><a asp-controller="Admin" asp-action="UserList">Back</a></p>
+    <p>Username: @Model.Name</p>
+    <p>Disabled: @Model.Lockout</p>
+    <a asp-controller="Account" asp-action="ToggleLock" asp-route-id="@Model.Id">Lock/Unlock account</a>
 </div>

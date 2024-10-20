@@ -37,11 +37,18 @@ public class AdminController : Controller
 
 		return View(userList);
 	}
-    public IActionResult UserDetails()
+    public IActionResult UserDetails(string id)
     {
-		// get user by id
-		// how do i get password from this
-        return View();
+		var user = _userManager.Users.First(x => x.Id == id);
+
+		var userVM = new UserDetailsViewModel()
+		{
+			Id = user.Id,
+			Name = user.UserName,
+            Lockout = user.LockoutEnabled
+		};
+        // get user by id
+        return View(userVM);
     }
 
     public IActionResult PasswordPolicy()

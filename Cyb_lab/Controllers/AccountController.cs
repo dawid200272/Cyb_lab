@@ -32,7 +32,16 @@ public class AccountController : Controller
 		return RedirectToAction(nameof(AccountController.Login), "Account");
 	}
 
-	[HttpGet]
+	public IActionResult ToggleLock(string id)
+	{
+        var user = _userManager.Users.First(x => x.Id == id);
+		user.LockoutEnabled = !user.LockoutEnabled;
+		user.LockoutEnd = DateTimeOffset.MaxValue;
+
+        return RedirectToAction(nameof(AdminController.UserDetails), id);
+	}
+
+    [HttpGet]
 	[AllowAnonymous]
 	public IActionResult Login()
 	{
