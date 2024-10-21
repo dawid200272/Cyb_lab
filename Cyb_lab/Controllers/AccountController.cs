@@ -35,10 +35,13 @@ public class AccountController : Controller
 	public IActionResult ToggleLock(string id)
 	{
         var user = _userManager.Users.First(x => x.Id == id);
-		user.LockoutEnabled = !user.LockoutEnabled;
-		user.LockoutEnd = DateTimeOffset.MaxValue;
+		_userManager.SetLockoutEnabledAsync(user, !user.LockoutEnabled);
+		_userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
 
-        return RedirectToAction(nameof(AdminController.UserDetails), id);
+		//user.LockoutEnabled = !user.LockoutEnabled;
+		//user.LockoutEnd = DateTimeOffset.MaxValue;
+
+        return RedirectToAction(nameof(AdminController.UserDetails), "Admin" , new { id });
 	}
 
     [HttpGet]
@@ -84,10 +87,11 @@ public class AccountController : Controller
 		}
 		if (result.IsLockedOut)
 		{
-			// Handle lockout scenario
-		}
+            ModelState.AddModelError(string.Empty, "Account is disabled");
+            return View(viewModel);
+        }
 
-		ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
 		return View(viewModel);
 	}
 
