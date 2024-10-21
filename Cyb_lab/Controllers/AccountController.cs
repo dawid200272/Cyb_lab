@@ -37,10 +37,10 @@ public class AccountController : Controller
         var user = _userManager.Users.First(x => x.Id == id);
 		user.Disabled = !user.Disabled;
 
-        return RedirectToAction(nameof(AdminController.UserDetails), "Admin" , new { id });
+		return RedirectToAction(nameof(AdminController.UserDetails), "Admin", new { id });
 	}
 
-    [HttpGet]
+	[HttpGet]
 	[AllowAnonymous]
 	public IActionResult Login()
 	{
@@ -56,38 +56,44 @@ public class AccountController : Controller
 			return View(viewModel);
 		}
 
+		var user = await _userManager.FindByNameAsync(viewModel.UserName);
+
+		if (user is null)
+		{
+			ModelState.AddModelError(string.Empty, "No user found");
+			return View(viewModel);
+		}
+
+		if (user.Disabled)
+		{
+			ModelState.AddModelError(string.Empty, "Account is disabled");
+			return View(viewModel);
+		}
+
 		var result = await _signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password, isPersistent: false, lockoutOnFailure: false);
 
 		if (result.Succeeded)
 		{
-			var user = await _userManager.GetUserAsync(User);
-
-    //        if (user.Disabled)
-    //        {
-    //            ModelState.AddModelError(string.Empty, "Account is disabled");
-				//return View(viewModel);
-    //        }
-
-            if (user!.FirstLogin)
+			if (user!.FirstLogin)
 			{
 				return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
 			}
 
 			// add date to compare, it'll be in password policy somewhere
-			if (user.LastPasswordChangeDate >= DateTime.UtcNow) 
-            {
-                return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
-            }
+			if (user.LastPasswordChangeDate >= DateTime.UtcNow)
+			{
+				return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
+			}
 
 			return RedirectToAction(nameof(HomeController.Index), "Home");
 		}
 		if (result.IsLockedOut)
 		{
-            ModelState.AddModelError(string.Empty, "Account is disabled");
-            return View(viewModel);
-        }
+			ModelState.AddModelError(string.Empty, "Account is disabled");
+			return View(viewModel);
+		}
 
-        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+		ModelState.AddModelError(string.Empty, "Invalid login attempt.");
 		return View(viewModel);
 	}
 
