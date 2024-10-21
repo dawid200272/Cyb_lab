@@ -1,5 +1,6 @@
 using Cyb_lab.Data;
 using Cyb_lab.PasswordHashers;
+using Cyb_lab.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +41,8 @@ builder.Services.AddAuthorizationBuilder()
 	.AddPolicy(UserRoles.User.ToString(), policy =>
 	policy.RequireRole(UserRoles.User.ToString()));
 #endregion
+
+builder.Services.AddTransient<PasswordHistoryService>();
 
 var app = builder.Build();
 

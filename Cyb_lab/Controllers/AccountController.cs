@@ -1,4 +1,6 @@
 ﻿using Cyb_lab.Data;
+using Cyb_lab.Models;
+using Cyb_lab.Services;
 using Cyb_lab.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,12 +13,15 @@ public class AccountController : Controller
 {
 	private readonly SignInManager<ApplicationUser> _signInManager;
 	private readonly UserManager<ApplicationUser> _userManager;
+	private readonly PasswordHistoryService _passwordHistoryService;
 
 	public AccountController(SignInManager<ApplicationUser> signInManager,
-		UserManager<ApplicationUser> userManager)
+		UserManager<ApplicationUser> userManager,
+		PasswordHistoryService passwordHistoryService)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
+		_passwordHistoryService = passwordHistoryService;
 	}
 
 	[HttpGet]
@@ -127,6 +132,12 @@ public class AccountController : Controller
 			return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
 		}
 
+		if (!_passwordHistoryService.IsPasswordUnique(user, viewModel.NewPassword))
+		{
+			ModelState.AddModelError(string.Empty, "Old passsword use is not allowed");
+			return View(viewModel);
+		}
+
 		var changePasswordResult = await _userManager.ChangePasswordAsync(user, viewModel.OldPassword, viewModel.NewPassword);
 
 		if (!changePasswordResult.Succeeded)
@@ -151,6 +162,16 @@ public class AccountController : Controller
 		}
 
 		var result = await _userManager.UpdateAsync(user);
+
+		var passwordEntry = new PasswordHistoryEntry()
+		{
+			UserId = user.Id,
+			User = user,
+			DateChanged = DateTime.UtcNow,
+			PasswordHash = user.PasswordHash!
+		};
+
+		_passwordHistoryService.AddEntry(passwordEntry);
 
 		return RedirectToAction(nameof(HomeController.Index), "Home");
 	}
