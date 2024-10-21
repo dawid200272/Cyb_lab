@@ -35,11 +35,7 @@ public class AccountController : Controller
 	public IActionResult ToggleLock(string id)
 	{
         var user = _userManager.Users.First(x => x.Id == id);
-		_userManager.SetLockoutEnabledAsync(user, !user.LockoutEnabled);
-		_userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
-
-		//user.LockoutEnabled = !user.LockoutEnabled;
-		//user.LockoutEnd = DateTimeOffset.MaxValue;
+		user.Disabled = !user.Disabled;
 
         return RedirectToAction(nameof(AdminController.UserDetails), "Admin" , new { id });
 	}

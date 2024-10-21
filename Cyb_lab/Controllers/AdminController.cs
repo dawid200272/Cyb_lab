@@ -46,7 +46,7 @@ public class AdminController : Controller
 		{
 			Id = user.Id,
 			Name = user.UserName,
-			Lockout = user.LockoutEnabled
+			Lockout = user.Disabled
 		};
 		// get user by id
 		return View(userVM);
