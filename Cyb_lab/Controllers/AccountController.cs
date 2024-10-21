@@ -34,8 +34,10 @@ public class AccountController : Controller
 
 	public IActionResult ToggleLock(string id)
 	{
-        var user = _userManager.Users.First(x => x.Id == id);
+		var user = _userManager.Users.First(x => x.Id == id);
 		user.Disabled = !user.Disabled;
+
+		_userManager.UpdateAsync(user);
 
 		return RedirectToAction(nameof(AdminController.UserDetails), "Admin", new { id });
 	}
@@ -146,9 +148,9 @@ public class AccountController : Controller
 		if (user.FirstLogin)
 		{
 			user.FirstLogin = false;
-
-			var result = await _userManager.UpdateAsync(user);
 		}
+
+		var result = await _userManager.UpdateAsync(user);
 
 		return RedirectToAction(nameof(HomeController.Index), "Home");
 	}
