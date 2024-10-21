@@ -16,12 +16,12 @@ public class AdminController : Controller
 		_userManager = userManager;
 	}
 
-    public IActionResult Panel()
-    {
-        return View();
-    }
+	public IActionResult Panel()
+	{
+		return View();
+	}
 
-    public IActionResult UserList()
+	public IActionResult UserList()
 	{
 		var tempUserList = _userManager.Users.ToList();
 
@@ -33,36 +33,36 @@ public class AdminController : Controller
 				Id = item.Id,
 				Name = item.UserName
 			});
-        }
+		}
 
 		return View(userList);
 	}
-    public IActionResult UserDetails(string id)
-    {
+
+	public IActionResult UserDetails(string id)
+	{
 		var user = _userManager.Users.First(x => x.Id == id);
 
 		var userVM = new UserDetailsViewModel()
 		{
 			Id = user.Id,
 			Name = user.UserName,
-            Lockout = user.LockoutEnabled
+			Lockout = user.LockoutEnabled
 		};
-        // get user by id
-        return View(userVM);
-    }
+		// get user by id
+		return View(userVM);
+	}
 
-    public IActionResult PasswordPolicy()
-    {
-        return View();
-    }
+	public IActionResult PasswordPolicy()
+	{
+		return View();
+	}
 
+	// add a new user account (with role 'User')
+	// change password policy options
+	// browse list of user accounts
+	// ...
 
-    // add a new user account (with role 'User')
-    // change password policy options
-    // browse list of user accounts
-    // ...
-
-    [HttpGet]
+	[HttpGet]
 	public IActionResult AddUser()
 	{
 		return View();
@@ -88,5 +88,56 @@ public class AdminController : Controller
 		await _userManager.AddToRoleAsync(newUser, UserRoles.User.ToString());
 
 		return RedirectToAction(nameof(HomeController.Index), "Home");
+	}
+
+	[HttpGet]
+	public async Task<IActionResult> EditUser(string? Id)
+	{
+		if (Id is null)
+		{
+			return NotFound("No user id was provided");
+		}
+
+		var user = await _userManager.FindByIdAsync(Id);
+
+		if (user is null)
+		{
+			return NotFound("User with given id cannot be found");
+		}
+
+		var viewModel = new SimpleUserViewModel()
+		{
+			Id = user.Id,
+			Name = user.UserName!
+		};
+
+		return View(viewModel);
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> EditUser(SimpleUserViewModel viewModel)
+	{
+		if (!ModelState.IsValid)
+		{
+			return View(viewModel);
+		}
+
+		var user = await _userManager.FindByIdAsync(viewModel.Id);
+
+		if (user is null)
+		{
+			return NotFound($"Unable to load user with given ID.");
+		}
+
+		var result = await _userManager.SetUserNameAsync(user, viewModel.Name);
+
+		if (!result.Succeeded)
+		{
+			return View(viewModel);
+		}
+
+		//await _userManager.UpdateNormalizedUserNameAsync(user);
+
+		return RedirectToAction(nameof(UserList));
 	}
 }

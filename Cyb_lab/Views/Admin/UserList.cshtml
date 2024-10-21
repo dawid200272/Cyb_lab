@@ -1,19 +1,37 @@
 ﻿@using Cyb_lab.ViewModels
 @{
-    ViewData["Title"] = "User List";
+	ViewData["Title"] = "User List";
 }
 
 @model List<SimpleUserViewModel>
 
 <div>
-    <a asp-controller="Admin" asp-action="Panel">Back</a><br />
-    List of users
-    @foreach (var item in Model)
-    {
-        <p>
-            User: @item.Name 
-            <a asp-controller="Admin" asp-action="UserDetails" asp-route-id="@item.Id">Details</a>
-        </p>
-    }
-    <a asp-controller="Admin" asp-action="AddUser">Add User</a>
+	<a asp-controller="Admin" asp-action="Panel">Back</a><br />
+	List of users
+	<table class="table">
+		<thead>
+			<tr>
+				<th>
+					Name
+				</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+		@foreach (var item in Model)
+		{
+			<tr>
+				<td>
+					@Html.DisplayFor(modelItem => item.Name)
+				</td>
+				<td>
+					<a asp-controller="Admin" asp-action="EditUser" asp-route-id="@item.Id">Edit</a> |
+					<a asp-controller="Admin" asp-action="UserDetails" asp-route-id="@item.Id">Details</a> |
+					<a asp-controller="Admin" asp-action="DeleteUser" asp-route-id="@item.Id">Delete</a>
+				</td>
+			</tr>
+		}
+		</tbody>
+	</table>
+	<a asp-controller="Admin" asp-action="AddUser">Add User</a>
 </div>
