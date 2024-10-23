@@ -1,9 +1,18 @@
-﻿namespace Cyb_lab.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Cyb_lab.ViewModels;
+
+public class UserDetailsViewModel
 {
-    public class UserDetailsViewModel
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public bool Lockout { get; set; }
-    }
+	[Required]
+	public string Id { get; set; }
+
+	[Required]
+	public string Name { get; set; }
+
+	[Required]
+	public bool Lockout { get; set; }
+
+	[Required]
+	public IList<string> Roles { get; set; } = [];
 }

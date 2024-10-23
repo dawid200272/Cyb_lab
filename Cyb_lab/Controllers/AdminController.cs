@@ -21,32 +21,38 @@ public class AdminController : Controller
 		return View();
 	}
 
-	public IActionResult UserList()
+	public async Task<IActionResult> UserList()
 	{
 		var tempUserList = _userManager.Users.ToList();
 
 		var userList = new List<SimpleUserViewModel>();
 		foreach (var item in tempUserList)
 		{
+			var userRoles = await _userManager.GetRolesAsync(item);
+
 			userList.Add(new SimpleUserViewModel()
 			{
 				Id = item.Id,
-				Name = item.UserName
+				Name = item.UserName,
+				Roles = userRoles
 			});
 		}
 
 		return View(userList);
 	}
 
-	public IActionResult UserDetails(string id)
+	public async Task<IActionResult> UserDetails(string id)
 	{
 		var user = _userManager.Users.First(x => x.Id == id);
+
+		var userRoles = await _userManager.GetRolesAsync(user);
 
 		var userVM = new UserDetailsViewModel()
 		{
 			Id = user.Id,
 			Name = user.UserName,
-			Lockout = user.Disabled
+			Lockout = user.Disabled,
+			Roles = userRoles
 		};
 		// get user by id
 		return View(userVM);
@@ -82,12 +88,17 @@ public class AdminController : Controller
 
 		if (!result.Succeeded)
 		{
+			foreach (var error in result.Errors)
+			{
+				ModelState.AddModelError(string.Empty, error.Description);
+			}
+
 			return View(viewModel);
 		}
 
 		await _userManager.AddToRoleAsync(newUser, UserRoles.User.ToString());
 
-		return RedirectToAction(nameof(HomeController.Index), "Home");
+		return RedirectToAction(nameof(UserList));
 	}
 
 	[HttpGet]
@@ -137,6 +148,31 @@ public class AdminController : Controller
 		}
 
 		//await _userManager.UpdateNormalizedUserNameAsync(user);
+
+		return RedirectToAction(nameof(UserList));
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> DeleteUser(string id)
+	{
+		var user = await _userManager.FindByIdAsync(id);
+
+		if (user is null)
+		{
+			return NotFound($"Unable to delete user with given ID.");
+		}
+
+		var result = await _userManager.DeleteAsync(user);
+
+		if (!result.Succeeded)
+		{
+			foreach (var error in result.Errors)
+			{
+				ModelState.AddModelError(string.Empty, error.Description);
+			}
+
+			return View(nameof(UserList));
+		}
 
 		return RedirectToAction(nameof(UserList));
 	}

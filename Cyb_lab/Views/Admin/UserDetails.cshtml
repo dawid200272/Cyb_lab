@@ -1,13 +1,16 @@
 ﻿@using Cyb_lab.ViewModels
 @{
-    ViewData["Title"] = "User Details";
+	ViewData["Title"] = "User Details";
 }
 
 @model UserDetailsViewModel
 
 <div>
-    <p><a asp-controller="Admin" asp-action="UserList">Back</a></p>
-    <p>Username: @Model.Name</p>
-    <p>Disabled: @Model.Lockout</p>
-    <a asp-controller="Account" asp-action="ToggleLock" asp-route-id="@Model.Id">Lock/Unlock account</a>
+	<p><a asp-controller="Admin" asp-action="UserList">Back</a></p>
+	<p><b>Username: </b> @Model.Name</p>
+	<p><b>Disabled: </b> @Model.Lockout</p>
+	@if (!Model.Roles.Any(r => r.Equals(UserRoles.Administrator.ToString())))
+	{
+		<a class="btn btn-secondary" asp-controller="Account" asp-action="ToggleLock" asp-route-id="@Model.Id">Lock/Unlock account</a>
+	}
 </div>

@@ -25,9 +25,24 @@
 					@Html.DisplayFor(modelItem => item.Name)
 				</td>
 				<td>
-					<a asp-controller="Admin" asp-action="EditUser" asp-route-id="@item.Id">Edit</a> |
-					<a asp-controller="Admin" asp-action="UserDetails" asp-route-id="@item.Id">Details</a> |
-					<a asp-controller="Admin" asp-action="DeleteUser" asp-route-id="@item.Id">Delete</a>
+					<a class="btn btn-secondary" asp-controller="Admin" asp-action="EditUser" asp-route-id="@item.Id">Edit</a>
+					<a class="btn btn-secondary" asp-controller="Admin" asp-action="UserDetails" asp-route-id="@item.Id">Details</a>
+					@if (!item.Roles.Any(r => r.Equals(UserRoles.Administrator.ToString())))
+					{
+						<form method="post" style="display:inline-block" asp-controller="Admin" asp-action="DeleteUser" asp-route-id="@item.Id">
+							
+							<span id="confirmDeleteSpan_@item.Id" style="display:none">
+								<span>Are you sure you want to Delete?</span>
+								<button type="submit" class="btn btn-danger">Yes</button>
+								<a href="#" class="btn btn-primary" onclick="confirmDelete('@item.Id', false)">No</a>
+							</span>
+
+							<span id="deleteSpan_@item.Id">
+								<a href="#" class="btn btn-danger" onclick="confirmDelete('@item.Id', true)">Delete</a>
+							</span>
+
+						</form>
+					}
 				</td>
 			</tr>
 		}
@@ -35,3 +50,18 @@
 	</table>
 	<a asp-controller="Admin" asp-action="AddUser">Add User</a>
 </div>
+
+<script>
+	function confirmDelete(uniqueId, isDeleteClicked) {
+		var deleteSpan = 'deleteSpan_' + uniqueId;
+		var confirmDeleteSpan = 'confirmDeleteSpan_' + uniqueId;
+
+		if (isDeleteClicked) {
+			$('#' + deleteSpan).hide();
+			$('#' + confirmDeleteSpan).show();
+		} else {
+			$('#' + deleteSpan).show();
+			$('#' + confirmDeleteSpan).hide();
+		}
+	}
+</script>
