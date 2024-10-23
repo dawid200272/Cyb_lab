@@ -176,4 +176,54 @@ public class AdminController : Controller
 
 		return RedirectToAction(nameof(UserList));
 	}
+
+	[HttpGet]
+	public async Task<IActionResult> ResetUserPassword(string id)
+	{
+		var user = await _userManager.FindByIdAsync(id);
+
+		if (user is null)
+		{
+			return NotFound($"Unable to find user with given ID.");
+		}
+
+		var viewModel = new ResetPasswordViewModel()
+		{
+			UserId = user.Id,
+		};
+
+		return View(viewModel);
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> ResetUserPassword(ResetPasswordViewModel viewModel)
+	{
+		if (!ModelState.IsValid)
+		{
+			return View(viewModel);
+		}
+
+		var user = await _userManager.FindByIdAsync(viewModel.UserId);
+
+		if (user is null)
+		{
+			return NotFound($"Unable to find user with given ID.");
+		}
+
+		var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+		var resetResult = await _userManager.ResetPasswordAsync(user, resetToken, viewModel.NewPassword);
+
+		if (!resetResult.Succeeded)
+		{
+			foreach (var error in resetResult.Errors)
+			{
+				ModelState.AddModelError(string.Empty, error.Description);
+			}
+
+			return View(viewModel);
+		}
+
+		return RedirectToAction(nameof(UserDetails), new { id = viewModel.UserId });
+	}
 }
