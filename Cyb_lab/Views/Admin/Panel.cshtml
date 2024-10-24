@@ -1,9 +1,12 @@
 ﻿@{
-    ViewData["Title"] = "Admin Panel";
+	ViewData["Title"] = "Admin panel";
 }
 
 <div class="text-center">
-    <a asp-controller="Admin" asp-action="UserList">User List</a>
-    <br />
-    <a asp-controller="Admin" asp-action="PasswordPolicy">Password Policy</a>
+	<h1 class="display-4">@ViewData["Title"]</h1>
+
+	<a class="btn btn-secondary" asp-controller="Admin" asp-action="UserList">User List</a>
+	<a class="btn btn-secondary" asp-controller="Admin" asp-action="ChangePasswordPolicy">Password Policy</a>
+	<br />
+	<a asp-controller="Home" asp-action="Index">Back</a>
 </div>

@@ -1,10 +1,25 @@
 using Cyb_lab.Data;
+using Cyb_lab.Options;
 using Cyb_lab.PasswordHashers;
 using Cyb_lab.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration
+	.SetBasePath(Directory.GetCurrentDirectory())
+	.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+	.AddEnvironmentVariables();
+
+var passwordPolicyOptionsConfig = builder.Configuration.GetSection(PasswordPolicyOptions.SectionName);
+
+builder.Services.AddOptions<PasswordPolicyOptions>()
+	.Bind(passwordPolicyOptionsConfig)
+	.ValidateDataAnnotations()
+	.ValidateOnStart();
+
+var passwordPolicyOptions = passwordPolicyOptionsConfig.Get<PasswordPolicyOptions>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -19,13 +34,18 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
 	{
-		// Password settings
-		options.Password.RequiredLength = 14;
-		options.Password.RequiredUniqueChars = 0;
-		options.Password.RequireNonAlphanumeric = false;
-		options.Password.RequireLowercase = false;
-		options.Password.RequireUppercase = false;
-		options.Password.RequireDigit = true;
+		if (passwordPolicyOptions is not null)
+		{
+			options.Password = new PasswordOptions()
+			{
+				RequiredLength = passwordPolicyOptions.RequiredLength,
+				RequiredUniqueChars = passwordPolicyOptions.RequiredUniqueChars,
+				RequireNonAlphanumeric = passwordPolicyOptions.RequireNonAlphanumeric,
+				RequireLowercase = passwordPolicyOptions.RequireLowercase,
+				RequireUppercase = passwordPolicyOptions.RequireUppercase,
+				RequireDigit = passwordPolicyOptions.RequireDigit,
+			};
+		}
 	})
 	.AddRoles<IdentityRole>()
 	.AddEntityFrameworkStores<AppDBContext>();
