@@ -1,4 +1,5 @@
 using Cyb_lab.Data;
+using Cyb_lab.Helpers;
 using Cyb_lab.Options;
 using Cyb_lab.PasswordHashers;
 using Cyb_lab.Services;
@@ -7,8 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var currentDirectory = Directory.GetCurrentDirectory();
+
+SettingsHelpers.CurrentDirectory = currentDirectory;
+
 builder.Configuration
-	.SetBasePath(Directory.GetCurrentDirectory())
+	.SetBasePath(currentDirectory)
 	.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 	.AddEnvironmentVariables();
 

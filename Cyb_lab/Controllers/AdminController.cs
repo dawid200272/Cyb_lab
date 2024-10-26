@@ -156,8 +156,6 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
-		//await _userManager.UpdateNormalizedUserNameAsync(user);
-
 		return RedirectToAction(nameof(UserList));
 	}
 
@@ -244,13 +242,13 @@ public class AdminController : Controller
 
 		var viewModel = new PasswordPolicyOptions()
 		{
-			RequiredLength = identityPasswordOptions.RequiredLength,
-			RequiredUniqueChars = identityPasswordOptions.RequiredUniqueChars,
-			RequireNonAlphanumeric = identityPasswordOptions.RequireNonAlphanumeric,
-			RequireLowercase = identityPasswordOptions.RequireLowercase,
-			RequireUppercase = identityPasswordOptions.RequireUppercase,
-			RequireDigit = identityPasswordOptions.RequireDigit,
-			ExpirationTime = TimeSpan.Parse("00:15:00"), // TODO: change this to real value
+			RequiredLength = passwordPolicyOptions.RequiredLength,
+			RequiredUniqueChars = passwordPolicyOptions.RequiredUniqueChars,
+			RequireNonAlphanumeric = passwordPolicyOptions.RequireNonAlphanumeric,
+			RequireLowercase = passwordPolicyOptions.RequireLowercase,
+			RequireUppercase = passwordPolicyOptions.RequireUppercase,
+			RequireDigit = passwordPolicyOptions.RequireDigit,
+			ExpirationTime = passwordPolicyOptions.ExpirationTime,
 		};
 
 		return View(viewModel);
@@ -264,44 +262,17 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
-		// TODO: Get current value for password policy options and store it as old version or sth
-
-		var oldPassswordOptions = _passwordOptionsMonitor.CurrentValue;
-
-		// TODO: Compare old version of password options with view model values
-		// Modify current value for password policy options with values from view model
-
-		//IDictionary<string, Type> propertyList = ComparePasswordOptions(oldPassswordOptions, viewModel);
-
-		// TODO: Update .json file
-
-		//UpdateJsonFile(propertyList);
-
 		UpdateJsonFile(viewModel);
-
-		// TODO: Set current value for password policy options as ...
-		// TODO: 
-
-		var passwordPolicyOptions = _passwordOptionsMonitor.CurrentValue;
 
 		_userManager.Options.Password = new PasswordOptions()
 		{
-			RequiredLength = passwordPolicyOptions.RequiredLength,
-			RequiredUniqueChars = passwordPolicyOptions.RequiredUniqueChars,
-			RequireNonAlphanumeric = passwordPolicyOptions.RequireNonAlphanumeric,
-			RequireLowercase = passwordPolicyOptions.RequireLowercase,
-			RequireUppercase = passwordPolicyOptions.RequireUppercase,
-			RequireDigit = passwordPolicyOptions.RequireDigit,
+			RequiredLength = viewModel.RequiredLength,
+			RequiredUniqueChars = viewModel.RequiredUniqueChars,
+			RequireNonAlphanumeric = viewModel.RequireNonAlphanumeric,
+			RequireLowercase = viewModel.RequireLowercase,
+			RequireUppercase = viewModel.RequireUppercase,
+			RequireDigit = viewModel.RequireDigit,
 		};
-
-
-
-		_identityOptionsMonitor.CurrentValue.Password.RequireNonAlphanumeric = viewModel.RequireNonAlphanumeric;
-		_identityOptionsMonitor.CurrentValue.Password.RequireDigit = viewModel.RequireDigit;
-
-		var identityPasswordOptions = _identityOptionsMonitor.CurrentValue.Password;
-
-		_userManager.Options.Password = identityPasswordOptions;
 
 		return RedirectToAction(nameof(Panel));
 	}
@@ -312,6 +283,7 @@ public class AdminController : Controller
 
 		var key = PasswordPolicyOptions.SectionName;
 
+		#region Setting Values in jsonObj
 		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.RequiredLength)}", jsonObj, newOptions.RequiredLength);
 
 		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.RequiredUniqueChars)}", jsonObj, newOptions.RequiredUniqueChars);
@@ -324,68 +296,9 @@ public class AdminController : Controller
 
 		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.RequireDigit)}", jsonObj, newOptions.RequireDigit);
 
-		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.ExpirationTime)}", jsonObj, newOptions.ExpirationTime);
+		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.ExpirationTime)}", jsonObj, newOptions.ExpirationTime); 
+		#endregion
 
 		SettingsHelpers.WriteInAppSettings(jsonObj);
 	}
-
-	//private static void UpdateJsonFile(IDictionary<string, Type> propertyList)
-	//{
-	//	var propertiesByType = propertyList.GroupBy(p => p.Value);
-
-	//	var jsonObj = SettingsHelpers.GetDynamicJson();
-
-	//	//     foreach (var group in propertiesByType)
-	//	//     {
-	//	//var groupPropertyList = group.ToList();
-
-	//	//var propertiesToUpdate = groupPropertyList.Select(p => { p.Key,  })
-
-	//	//SettingsHelpers.SetValueRangeRecursivelyInDynamicJson()
-	//	//     }
-
-	//	//SettingsHelpers.AddOrUpdateAppSettings
-	//}
-
-	//private IDictionary<string, Type> ComparePasswordOptions(PasswordPolicyOptions oldPassswordOptions, PasswordPolicyOptions viewModel)
-	//{
-	//	IDictionary<string, Type> propertyList = new Dictionary<string, Type>();
-
-	//	if (oldPassswordOptions.RequiredLength != viewModel.RequiredLength)
-	//	{
-	//		propertyList.Add(nameof(viewModel.RequiredLength), typeof(int));
-	//	}
-
-	//	if (oldPassswordOptions.RequiredUniqueChars != viewModel.RequiredUniqueChars)
-	//	{
-	//		propertyList.Add(nameof(viewModel.RequiredUniqueChars), typeof(int));
-	//	}
-
-	//	if (oldPassswordOptions.RequireNonAlphanumeric != viewModel.RequireNonAlphanumeric)
-	//	{
-	//		propertyList.Add(nameof(viewModel.RequireNonAlphanumeric), typeof(bool));
-	//	}
-
-	//	if (oldPassswordOptions.RequireLowercase != viewModel.RequireLowercase)
-	//	{
-	//		propertyList.Add(nameof(viewModel.RequireLowercase), typeof(bool));
-	//	}
-
-	//	if (oldPassswordOptions.RequireUppercase != viewModel.RequireUppercase)
-	//	{
-	//		propertyList.Add(nameof(viewModel.RequireUppercase), typeof(bool));
-	//	}
-
-	//	if (oldPassswordOptions.RequireDigit != viewModel.RequireDigit)
-	//	{
-	//		propertyList.Add(nameof(viewModel.RequireDigit), typeof(bool));
-	//	}
-
-	//	if (oldPassswordOptions.ExpirationTime != viewModel.ExpirationTime)
-	//	{
-	//		propertyList.Add(nameof(viewModel.ExpirationTime), typeof(TimeSpan));
-	//	}
-
-	//	return propertyList;
-	//}
 }
