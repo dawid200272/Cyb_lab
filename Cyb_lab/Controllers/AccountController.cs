@@ -1,10 +1,12 @@
 ﻿using Cyb_lab.Data;
 using Cyb_lab.Models;
+using Cyb_lab.Options;
 using Cyb_lab.Services;
 using Cyb_lab.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Cyb_lab.Controllers;
 
@@ -14,14 +16,17 @@ public class AccountController : Controller
 	private readonly SignInManager<ApplicationUser> _signInManager;
 	private readonly UserManager<ApplicationUser> _userManager;
 	private readonly PasswordHistoryService _passwordHistoryService;
+	private readonly IOptionsMonitor<PasswordPolicyOptions> _passwordOptionsMonitor;
 
 	public AccountController(SignInManager<ApplicationUser> signInManager,
 		UserManager<ApplicationUser> userManager,
-		PasswordHistoryService passwordHistoryService)
+		PasswordHistoryService passwordHistoryService,
+		IOptionsMonitor<PasswordPolicyOptions> passwordOptionsMonitor)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
 		_passwordHistoryService = passwordHistoryService;
+		_passwordOptionsMonitor = passwordOptionsMonitor;
 	}
 
 	[HttpGet]
@@ -33,7 +38,6 @@ public class AccountController : Controller
 			return RedirectToAction(nameof(HomeController.Index), "Home", new { isLogedIn = true });
 		}
 
-		//return View();
 		return RedirectToAction(nameof(AccountController.Login), "Account");
 	}
 
@@ -86,10 +90,11 @@ public class AccountController : Controller
 				return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
 			}
 
-			// add date to compare, it'll be in password policy somewhere
-			if (user.LastPasswordChangeDate >= DateTime.UtcNow)
+			var passwordExpirationTime = _passwordOptionsMonitor.CurrentValue.ExpirationTime;
+
+			if (DateTime.UtcNow - user.LastPasswordChangeDate >= passwordExpirationTime)
 			{
-				return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
+				return RedirectToAction(nameof(ChangePassword), "Account");
 			}
 
 			return RedirectToAction(nameof(HomeController.Index), "Home");
