@@ -301,4 +301,10 @@ public class AdminController : Controller
 
 		SettingsHelpers.WriteInAppSettings(jsonObj);
 	}
+
+	public IActionResult Logs()
+	{
+		//get all logs from db
+		return View();
+	}
 }
