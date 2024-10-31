@@ -14,5 +14,8 @@ public class UserDetailsViewModel
 	public bool Lockout { get; set; }
 
 	[Required]
+	public bool OnetimePasswordEnabled { get; set; }
+
+	[Required]
 	public IList<string> Roles { get; set; } = [];
 }

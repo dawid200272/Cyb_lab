@@ -18,6 +18,14 @@ public class AccountController : Controller
 	private readonly PasswordHistoryService _passwordHistoryService;
 	private readonly IOptionsMonitor<PasswordPolicyOptions> _passwordOptionsMonitor;
 
+	private const string _onetimePasswordFunctionString = "lg(a/x)";
+	private Func<int, int, double> _onetimePasswordFunction =
+		(int a, int x) =>
+	{
+		return Math.Log10((double)a / x);
+	};
+	private Random _random;
+
 	public AccountController(SignInManager<ApplicationUser> signInManager,
 		UserManager<ApplicationUser> userManager,
 		PasswordHistoryService passwordHistoryService,
@@ -27,6 +35,9 @@ public class AccountController : Controller
 		_userManager = userManager;
 		_passwordHistoryService = passwordHistoryService;
 		_passwordOptionsMonitor = passwordOptionsMonitor;
+
+		var time = DateTime.UtcNow.Second;
+		_random = new Random(time);
 	}
 
 	[HttpGet]
@@ -47,6 +58,23 @@ public class AccountController : Controller
 		user.Disabled = !user.Disabled;
 
 		_userManager.UpdateAsync(user);
+
+		return RedirectToAction(nameof(AdminController.UserDetails), "Admin", new { id });
+	}
+
+	public async Task<IActionResult> ToggleOnetimePassword(string id)
+	{
+		var user = await _userManager.FindByIdAsync(id);
+
+		if (user is null)
+		{
+			ModelState.AddModelError(string.Empty, $"No user with {id} was found");
+			return View(nameof(AdminController.UserDetails));
+		}
+
+		user.OnetimePasswordEnabled = !user.OnetimePasswordEnabled;
+
+		await _userManager.UpdateAsync(user);
 
 		return RedirectToAction(nameof(AdminController.UserDetails), "Admin", new { id });
 	}
@@ -78,6 +106,17 @@ public class AccountController : Controller
 		if (user.Disabled)
 		{
 			ModelState.AddModelError(string.Empty, "Account is disabled");
+			return View(viewModel);
+		}
+
+		if (user.OnetimePasswordEnabled)
+		{
+			return RedirectToAction(nameof(OnetimePasswordLogin), new { userId = user.Id});
+		}
+
+		if (string.IsNullOrWhiteSpace(viewModel.Password))
+		{
+			ModelState.AddModelError(string.Empty, "Password is required");
 			return View(viewModel);
 		}
 
@@ -179,5 +218,86 @@ public class AccountController : Controller
 		_passwordHistoryService.AddEntry(passwordEntry);
 
 		return RedirectToAction(nameof(HomeController.Index), "Home");
+	}
+
+	[HttpGet]
+	[AllowAnonymous]
+	public async Task<IActionResult> OnetimePasswordLogin(string userId)
+	{
+		var user = await _userManager.FindByIdAsync(userId);
+
+		var viewModel = new OnetimePasswordLoginViewModel();
+
+		if (user is null)
+		{
+			ModelState.AddModelError(string.Empty, "No user found");
+			return View(viewModel);
+		}
+
+		viewModel.UserName = user.UserName!;
+
+		await GenerateOnetimePassword(viewModel, user);
+
+		return View(viewModel);
+	}
+
+	[HttpPost]
+	[AllowAnonymous]
+	public async Task<IActionResult> OnetimePasswordLogin(OnetimePasswordLoginViewModel viewModel)
+	{
+		var user = await _userManager.FindByNameAsync(viewModel.UserName);
+
+		if (user is null)
+		{
+			ModelState.AddModelError(string.Empty, "No user found");
+			return View(viewModel);
+		}
+
+		if (user.OnetimePasswordValue is null)
+		{
+			ModelState.AddModelError(string.Empty, "Click 'Login' button to generate new onetime password");
+
+			await GenerateOnetimePassword(viewModel, user);
+
+			return View(viewModel);
+		}
+
+		if (viewModel.OnetimePassword != user.OnetimePasswordValue)
+		{
+			await GenerateOnetimePassword(viewModel, user);
+
+			return View(viewModel);
+		}
+
+		await _signInManager.SignInAsync(user, false);
+
+		user.OnetimePasswordValue = null;
+		await _userManager.UpdateAsync(user);
+
+		return RedirectToAction(nameof(HomeController.Index), "Home");
+	}
+
+	private async Task GenerateOnetimePassword(OnetimePasswordLoginViewModel viewModel, ApplicationUser user)
+	{
+		int decimalPlaces = 2;
+
+		int a = user.UserName!.Length;
+
+		const int minInt = 1;
+		const int maxInt = 100;
+
+		int x = _random.Next(minInt, maxInt);
+
+		var functionResult = _onetimePasswordFunction.Invoke(a, x);
+		user.OnetimePasswordValue = Math.Round(functionResult, decimalPlaces);
+
+		viewModel.OnetimePasswordFunction = _onetimePasswordFunctionString;
+		viewModel.A = a;
+		viewModel.X = x;
+
+		// TODO: Delete when finished
+		viewModel.FunctionValue = functionResult;
+
+		await _userManager.UpdateAsync(user);
 	}
 }

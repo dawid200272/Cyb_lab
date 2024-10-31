@@ -9,9 +9,11 @@
 	<p><a asp-controller="Admin" asp-action="UserList">Back</a></p>
 	<p><b>Username: </b> @Model.Name</p>
 	<p><b>Disabled: </b> @Model.Lockout</p>
+	<p><b>Onetime Password: </b> @Model.OnetimePasswordEnabled</p>
 	@if (!Model.Roles.Any(r => r.Equals(UserRoles.Administrator.ToString())))
 	{
 		<a class="btn btn-secondary" asp-controller="Account" asp-action="ToggleLock" asp-route-id="@Model.Id">Lock/Unlock account</a>
+		<a class="btn btn-secondary" asp-controller="Account" asp-action="ToggleOnetimePassword" asp-route-id="@Model.Id">Enable/Disable onetime password</a>
 	}
 	<a class="btn btn-secondary" asp-controller="Admin" asp-action="ResetUserPassword" asp-route-id="@Model.Id">Reset password</a>
 </div>

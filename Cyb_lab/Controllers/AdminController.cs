@@ -61,7 +61,8 @@ public class AdminController : Controller
 			Id = user.Id,
 			Name = user.UserName,
 			Lockout = user.Disabled,
-			Roles = userRoles
+			OnetimePasswordEnabled = user.OnetimePasswordEnabled,
+			Roles = userRoles,
 		};
 		// get user by id
 		return View(userVM);

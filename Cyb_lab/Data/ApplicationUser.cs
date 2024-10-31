@@ -8,7 +8,10 @@ public class ApplicationUser : IdentityUser
 	public bool FirstLogin { get; set; } = true;
 	public bool Disabled { get; set; } = false;
 
-    public ApplicationUser() : base() { }
+	public bool OnetimePasswordEnabled { get; set; }
+	public double? OnetimePasswordValue { get; set; } = null;
+
+	public ApplicationUser() : base() { }
 
 	public ApplicationUser(string userName) : base(userName)
 	{

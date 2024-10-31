@@ -3,6 +3,7 @@ using System;
 using Cyb_lab.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cyb_lab.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20241031145839_OnetimePassword")]
+    partial class OnetimePassword
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -61,9 +64,6 @@ namespace Cyb_lab.Migrations
 
                     b.Property<bool>("OnetimePasswordEnabled")
                         .HasColumnType("INTEGER");
-
-                    b.Property<double?>("OnetimePasswordValue")
-                        .HasColumnType("REAL");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("TEXT");
