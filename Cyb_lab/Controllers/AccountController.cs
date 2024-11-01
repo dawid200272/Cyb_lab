@@ -120,7 +120,7 @@ public class AccountController : Controller
 			return View(viewModel);
 		}
 
-		var result = await _signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password, isPersistent: false, lockoutOnFailure: false);
+		var result = await _signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password, isPersistent: false, lockoutOnFailure: true);
 
 		if (result.Succeeded)
 		{
@@ -140,7 +140,7 @@ public class AccountController : Controller
 		}
 		if (result.IsLockedOut)
 		{
-			ModelState.AddModelError(string.Empty, "Account is disabled");
+			ModelState.AddModelError(string.Empty, "Too many login attempts, try again later");
 			return View(viewModel);
 		}
 
