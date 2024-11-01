@@ -42,6 +42,42 @@
             &copy; 2024 - Cyb_lab - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
+    @* Inactivity timer *@
+    <script>
+        var inactivityTime = function () {
+            var time;
+            window.onload = resetTimer;
+            // DOM Events
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onload = resetTimer;
+            document.onclick = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onmousedown = resetTimer; // touchscreen presses
+
+            function logout() {
+                document.getElementById("logoutForm").submit();
+                // alert("You are now logged out.")
+                //location.href = 'logout.html'
+            }
+
+            function resetTimer() {
+                clearTimeout(time);
+                time = setTimeout(logout, 5000)
+                // 1000 milliseconds = 1 second
+            }
+        };
+    </script>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script>
+            window.onload = function () {
+                inactivityTime();
+            }
+        </script>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
