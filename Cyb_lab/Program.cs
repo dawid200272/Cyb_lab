@@ -57,10 +57,10 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
-    // Default Lockout settings.
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-    options.Lockout.MaxFailedAccessAttempts = 3;
-    options.Lockout.AllowedForNewUsers = true;
+	// Default Lockout settings.
+	options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+	options.Lockout.MaxFailedAccessAttempts = 3;
+	options.Lockout.AllowedForNewUsers = true;
 });
 
 builder.Services.AddTransient<IPasswordHasher<ApplicationUser>, BCryptPasswordHasher<ApplicationUser>>();
@@ -76,6 +76,7 @@ builder.Services.AddAuthorizationBuilder()
 #endregion
 
 builder.Services.AddTransient<PasswordHistoryService>();
+builder.Services.AddTransient<EventLogsService>();
 
 var app = builder.Build();
 

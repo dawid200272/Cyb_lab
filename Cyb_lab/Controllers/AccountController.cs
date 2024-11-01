@@ -16,6 +16,7 @@ public class AccountController : Controller
 	private readonly SignInManager<ApplicationUser> _signInManager;
 	private readonly UserManager<ApplicationUser> _userManager;
 	private readonly PasswordHistoryService _passwordHistoryService;
+	private readonly EventLogsService _eventLogsService;
 	private readonly IOptionsMonitor<PasswordPolicyOptions> _passwordOptionsMonitor;
 
 	private const string _onetimePasswordFunctionString = "lg(a/x)";
@@ -29,12 +30,14 @@ public class AccountController : Controller
 	public AccountController(SignInManager<ApplicationUser> signInManager,
 		UserManager<ApplicationUser> userManager,
 		PasswordHistoryService passwordHistoryService,
-		IOptionsMonitor<PasswordPolicyOptions> passwordOptionsMonitor)
+		IOptionsMonitor<PasswordPolicyOptions> passwordOptionsMonitor,
+		EventLogsService eventLogsService)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
 		_passwordHistoryService = passwordHistoryService;
 		_passwordOptionsMonitor = passwordOptionsMonitor;
+		_eventLogsService = eventLogsService;
 
 		var time = DateTime.UtcNow.Second;
 		_random = new Random(time);
@@ -59,6 +62,17 @@ public class AccountController : Controller
 
 		_userManager.UpdateAsync(user);
 
+		var toggleLockEvent = new EventEntry()
+		{
+			UserId = null, // TODO: Add admin id here
+			User = null, // TODO: Add ref to admin here
+			Date = DateTime.UtcNow,
+			Action = nameof(ToggleLock),
+			Description = $"{nameof(user.Disabled)} property of user '{user.UserName}' has been set to '{user.Disabled}'",
+		};
+
+		_eventLogsService.AddEntry(toggleLockEvent);
+
 		return RedirectToAction(nameof(AdminController.UserDetails), "Admin", new { id });
 	}
 
@@ -75,6 +89,17 @@ public class AccountController : Controller
 		user.OnetimePasswordEnabled = !user.OnetimePasswordEnabled;
 
 		await _userManager.UpdateAsync(user);
+
+		var toggleOnetimePasswordEvent = new EventEntry()
+		{
+			UserId = null, // TODO: Add admin id here
+			User =  null, // TODO: Add ref to admin here
+			Date = DateTime.UtcNow,
+			Action = nameof(ToggleOnetimePassword),
+			Description = $"{nameof(user.OnetimePasswordEnabled)} property of user '{user.UserName}' has been set to '{user.OnetimePasswordEnabled}'",
+		};
+
+		_eventLogsService.AddEntry(toggleOnetimePasswordEvent);
 
 		return RedirectToAction(nameof(AdminController.UserDetails), "Admin", new { id });
 	}
@@ -97,15 +122,38 @@ public class AccountController : Controller
 
 		var user = await _userManager.FindByNameAsync(viewModel.UserName);
 
+		var loginEvent = new EventEntry()
+		{
+			UserId = user?.Id,
+			User = user,
+			Date = DateTime.UtcNow,
+			Action = nameof(Login),
+		};
+
+		var LoginSucceededMessage = "Login succeeded";
+		var loginFailedMessage = "Login failed";
+
 		if (user is null)
 		{
-			ModelState.AddModelError(string.Empty, "No user found");
+			var notFoundMessage = "No user found";
+
+			ModelState.AddModelError(string.Empty, notFoundMessage);
+
+			loginEvent.Description = $"{loginFailedMessage} : {notFoundMessage}";
+			_eventLogsService.AddEntry(loginEvent);
+
 			return View(viewModel);
 		}
 
 		if (user.Disabled)
 		{
-			ModelState.AddModelError(string.Empty, "Account is disabled");
+			var disabledMessage = "Account is disabled";
+
+			ModelState.AddModelError(string.Empty, disabledMessage);
+
+			loginEvent.Description = $"{loginFailedMessage} : {disabledMessage}";
+			_eventLogsService.AddEntry(loginEvent);
+
 			return View(viewModel);
 		}
 
@@ -116,7 +164,13 @@ public class AccountController : Controller
 
 		if (string.IsNullOrWhiteSpace(viewModel.Password))
 		{
-			ModelState.AddModelError(string.Empty, "Password is required");
+			var passwordRequiredMessage = "Password required";
+
+			ModelState.AddModelError(string.Empty, passwordRequiredMessage);
+
+			loginEvent.Description = $"{loginFailedMessage} : {passwordRequiredMessage}";
+			_eventLogsService.AddEntry(loginEvent);
+
 			return View(viewModel);
 		}
 
@@ -126,6 +180,11 @@ public class AccountController : Controller
 		{
 			if (user!.FirstLogin)
 			{
+				var firstLoginMessage = $"First login of user '{user.UserName}'";
+
+				loginEvent.Description = $"{LoginSucceededMessage} : {firstLoginMessage}";
+				_eventLogsService.AddEntry(loginEvent);
+
 				return RedirectToAction(nameof(AccountController.ChangePassword), "Account");
 			}
 
@@ -133,25 +192,60 @@ public class AccountController : Controller
 
 			if (DateTime.UtcNow - user.LastPasswordChangeDate >= passwordExpirationTime)
 			{
+				var passwordExpiredMessage = "Password expired";
+
+				// TODO: change that to sth more reasonable
+				loginEvent.Description = $"{LoginSucceededMessage} : {passwordExpiredMessage}";
+				_eventLogsService.AddEntry(loginEvent);
+
 				return RedirectToAction(nameof(ChangePassword), "Account");
 			}
+
+			loginEvent.Description = LoginSucceededMessage;
+			_eventLogsService.AddEntry(loginEvent);
 
 			return RedirectToAction(nameof(HomeController.Index), "Home");
 		}
 		if (result.IsLockedOut)
 		{
+			var lockedMessage = "Account locked";
+
 			ModelState.AddModelError(string.Empty, "Too many login attempts, try again later");
+
+			loginEvent.Description = $"{loginFailedMessage} : {lockedMessage}";
+			_eventLogsService.AddEntry(loginEvent);
+
 			return View(viewModel);
 		}
 
-		ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+		var invalidLoginMessage = "Invalid login attempt";
+
+		ModelState.AddModelError(string.Empty, invalidLoginMessage);
+
+		loginEvent.Description = $"{loginFailedMessage} : {invalidLoginMessage}";
+		_eventLogsService.AddEntry(loginEvent);
+
 		return View(viewModel);
 	}
 
 	[HttpPost]
 	public async Task<IActionResult> Logout()
 	{
+		var user = await _userManager.GetUserAsync(User);
+
 		await _signInManager.SignOutAsync();
+
+		var logoutEvent = new EventEntry()
+		{
+			UserId = user!.Id,
+			User = user,
+			Date = DateTime.UtcNow,
+			Action = nameof(Logout),
+			Description = $"User '{user.UserName}' logged out",
+		};
+
+		_eventLogsService.AddEntry(logoutEvent);
+
 		return RedirectToAction(nameof(HomeController.Index), "Home");
 	}
 

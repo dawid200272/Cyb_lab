@@ -7,6 +7,7 @@ namespace Cyb_lab.Data;
 public class AppDBContext : IdentityDbContext<ApplicationUser>
 {
 	public DbSet<PasswordHistoryEntry> PasswordHistory { get; set; }
+	public DbSet<EventEntry> EventLogs { get; set; }
 
 	public AppDBContext(DbContextOptions<AppDBContext> options) : base(options) { }
 
