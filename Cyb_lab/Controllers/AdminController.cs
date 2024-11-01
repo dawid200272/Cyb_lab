@@ -106,6 +106,8 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
+		newUser.OnetimePasswordEnabled = viewModel.OnetimePasswordEnabled;
+
 		await _userManager.AddToRoleAsync(newUser, UserRoles.User.ToString());
 
 		return RedirectToAction(nameof(UserList));

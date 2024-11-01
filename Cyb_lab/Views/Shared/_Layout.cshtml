@@ -27,7 +27,7 @@
                         </li>
                     </ul>
                 </div>
-				<partial name="_LoginPartial" />
+                <partial name="_LoginPartial" />
             </div>
         </nav>
     </header>
@@ -46,6 +46,8 @@
     @* Inactivity timer *@
     <script>
         var inactivityTime = function () {
+            const second = 1000;
+            var timeout = 60 * second;
             var time;
             window.onload = resetTimer;
             // DOM Events
@@ -64,7 +66,7 @@
 
             function resetTimer() {
                 clearTimeout(time);
-                time = setTimeout(logout, 5000)
+                time = setTimeout(logout, timeout)
                 // 1000 milliseconds = 1 second
             }
         };
