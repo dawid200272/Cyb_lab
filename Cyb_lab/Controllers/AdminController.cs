@@ -2,6 +2,7 @@ using Cyb_lab.Data;
 using Cyb_lab.Helpers;
 using Cyb_lab.Models;
 using Cyb_lab.Options;
+using Cyb_lab.Services;
 using Cyb_lab.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -16,14 +17,17 @@ public class AdminController : Controller
 	private readonly UserManager<ApplicationUser> _userManager;
 	private readonly IOptionsMonitor<IdentityOptions> _identityOptionsMonitor;
 	private readonly IOptionsMonitor<PasswordPolicyOptions> _passwordOptionsMonitor;
+	private readonly EventLogsService _eventLogsService;
 
 	public AdminController(UserManager<ApplicationUser> userManager,
 		IOptionsMonitor<IdentityOptions> identityOptionsMonitor,
-		IOptionsMonitor<PasswordPolicyOptions> passwordOptionsMonitor)
+		IOptionsMonitor<PasswordPolicyOptions> passwordOptionsMonitor,
+		EventLogsService eventLogsService)
 	{
 		_userManager = userManager;
 		_identityOptionsMonitor = identityOptionsMonitor;
 		_passwordOptionsMonitor = passwordOptionsMonitor;
+		_eventLogsService = eventLogsService;
 	}
 
 	public IActionResult Panel()
@@ -93,6 +97,14 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
+		var addUserEvent = new EventEntry()
+		{
+			UserId = null, // TODO: Add admin id here
+			User = null, // TODO: Add ref to admin here
+			Date = DateTime.UtcNow,
+			Action = nameof(AddUser),
+		};
+
 		var newUser = new ApplicationUser(viewModel.UserName);
 
 		var result = await _userManager.CreateAsync(newUser, viewModel.Password);
@@ -110,6 +122,10 @@ public class AdminController : Controller
 		newUser.OnetimePasswordEnabled = viewModel.OnetimePasswordEnabled;
 
 		await _userManager.AddToRoleAsync(newUser, UserRoles.User.ToString());
+
+		addUserEvent.Description = $"User '{newUser.UserName}' has been added";
+
+		_eventLogsService.AddEntry(addUserEvent);
 
 		return RedirectToAction(nameof(UserList));
 	}
@@ -146,6 +162,14 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
+		var editUserEvent = new EventEntry()
+		{
+			UserId = null, // TODO: Add admin id here
+			User = null, // TODO: Add ref to admin here
+			Date = DateTime.UtcNow,
+			Action = nameof(EditUser),
+		};
+
 		var user = await _userManager.FindByIdAsync(viewModel.Id);
 
 		if (user is null)
@@ -160,6 +184,10 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
+		editUserEvent.Description = $"User '{user.UserName}' has been edited";
+
+		_eventLogsService.AddEntry(editUserEvent);
+
 		return RedirectToAction(nameof(UserList));
 	}
 
@@ -167,6 +195,14 @@ public class AdminController : Controller
 	public async Task<IActionResult> DeleteUser(string id)
 	{
 		var user = await _userManager.FindByIdAsync(id);
+
+		var deleteUserEvent = new EventEntry()
+		{
+			UserId = null, // TODO: Add admin id here
+			User = null, // TODO: Add ref to admin here
+			Date = DateTime.UtcNow,
+			Action = nameof(DeleteUser),
+		};
 
 		if (user is null)
 		{
@@ -184,6 +220,10 @@ public class AdminController : Controller
 
 			return View(nameof(UserList));
 		}
+
+		deleteUserEvent.Description = $"User '{user.UserName}' has been deleted";
+
+		_eventLogsService.AddEntry(deleteUserEvent);
 
 		return RedirectToAction(nameof(UserList));
 	}
@@ -214,6 +254,14 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
+		var resetUserPasswordEvent = new EventEntry()
+		{
+			UserId = null, // TODO: Add admin id here
+			User = null, // TODO: Add ref to admin here
+			Date = DateTime.UtcNow,
+			Action = nameof(ResetUserPassword),
+		};
+
 		var user = await _userManager.FindByIdAsync(viewModel.UserId);
 
 		if (user is null)
@@ -234,6 +282,10 @@ public class AdminController : Controller
 
 			return View(viewModel);
 		}
+
+		resetUserPasswordEvent.Description = $"User '{user.UserName}'s' password has been reset";
+
+		_eventLogsService.AddEntry(resetUserPasswordEvent);
 
 		return RedirectToAction(nameof(UserDetails), new { id = viewModel.UserId });
 	}
@@ -266,6 +318,14 @@ public class AdminController : Controller
 			return View(viewModel);
 		}
 
+		var changePasswordPolicyEvent = new EventEntry()
+		{
+			UserId = null, // TODO: Add admin id here
+			User = null, // TODO: Add ref to admin here
+			Date = DateTime.UtcNow,
+			Action = nameof(ChangePasswordPolicy),
+		};
+
 		UpdateJsonFile(viewModel);
 
 		_userManager.Options.Password = new PasswordOptions()
@@ -277,6 +337,10 @@ public class AdminController : Controller
 			RequireUppercase = viewModel.RequireUppercase,
 			RequireDigit = viewModel.RequireDigit,
 		};
+
+		changePasswordPolicyEvent.Description = "Password policy has been changed";
+
+		_eventLogsService.AddEntry(changePasswordPolicyEvent);
 
 		return RedirectToAction(nameof(Panel));
 	}
@@ -306,15 +370,24 @@ public class AdminController : Controller
 		SettingsHelpers.WriteInAppSettings(jsonObj);
 	}
 
+	[HttpGet]
 	public IActionResult Logs()
 	{
-		//List<EventEntryViewModel> l = new();
-		//l.Add(new EventEntryViewModel { User="test1", Date=DateTime.Now, Action="t", Description="b"});
-		//l.Add(new EventEntryViewModel { User = "test12", Date = DateTime.Now, Action = "t", Description = "b" });
-		//l.Add(new EventEntryViewModel { User = "test14", Date = DateTime.Now, Action = "t", Description = "b" });
-		//l.Add(new EventEntryViewModel { User = "test3", Date = DateTime.Now, Action = "t", Description = "b" });
-		//l.Add(new EventEntryViewModel { User = "test4", Date = DateTime.Now, Action = "t", Description = "b" });
-		//get all logs from db
-		return View();
+		var viewModel = new List<EventEntryViewModel>();
+
+		var eventEntries = _eventLogsService.GetLogs();
+
+		foreach (var entry in eventEntries)
+		{
+			viewModel.Add(new EventEntryViewModel()
+			{
+				User = entry.User?.UserName ?? "ADMIN",
+				Date = entry.Date,
+				Action = entry.Action,
+				Description = entry.Description,
+			});
+		}
+
+		return View(viewModel);
 	}
 }

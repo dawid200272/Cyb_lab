@@ -17,7 +17,9 @@ public class EventLogsService
 
 	public IQueryable<EventEntry> GetLogs()
 	{
-		return _logs.AsQueryable();
+		return _logs
+			.Include(e => e.User)
+			.AsQueryable();
 	}
 
 	public void AddEntry(EventEntry entry)

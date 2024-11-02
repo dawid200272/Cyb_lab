@@ -270,6 +270,14 @@ public class AccountController : Controller
 			return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
 		}
 
+		var changePasswordEvent = new EventEntry()
+		{
+			UserId = user!.Id,
+			User = user,
+			Date = DateTime.UtcNow,
+			Action = nameof(ChangePassword),
+		};
+
 		if (!_passwordHistoryService.IsPasswordUnique(user, viewModel.NewPassword))
 		{
 			ModelState.AddModelError(string.Empty, "Old passsword use is not allowed");
@@ -311,6 +319,10 @@ public class AccountController : Controller
 
 		_passwordHistoryService.AddEntry(passwordEntry);
 
+		changePasswordEvent.Description = $"User '{user.UserName}'s' password has been changed";
+
+		_eventLogsService.AddEntry(changePasswordEvent);
+
 		return RedirectToAction(nameof(HomeController.Index), "Home");
 	}
 
@@ -347,6 +359,14 @@ public class AccountController : Controller
 			return View(viewModel);
 		}
 
+		var onetimePasswordLoginEvent = new EventEntry()
+		{
+			UserId = user!.Id,
+			User = user,
+			Date = DateTime.UtcNow,
+			Action = nameof(OnetimePasswordLogin),
+		};
+
 		if (user.OnetimePasswordValue is null)
 		{
 			ModelState.AddModelError(string.Empty, "Click 'Login' button to generate new onetime password");
@@ -367,6 +387,10 @@ public class AccountController : Controller
 
 		user.OnetimePasswordValue = null;
 		await _userManager.UpdateAsync(user);
+
+		onetimePasswordLoginEvent.Description = $"Onetime password login succeeded";
+
+		_eventLogsService.AddEntry(onetimePasswordLoginEvent);
 
 		return RedirectToAction(nameof(HomeController.Index), "Home");
 	}
