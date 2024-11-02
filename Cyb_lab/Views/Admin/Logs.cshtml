@@ -2,7 +2,45 @@
 	ViewData["Title"] = "Logs";
 }
 
+@model List<EventEntryViewModel>
+
 <div class="text-center">
 	<a asp-controller="Admin" asp-action="Panel">Back</a><br />
-
+	<table class="table">
+		<thead>
+			<tr>
+				<th>
+					User
+				</th>
+				<th>
+					Date
+				</th>
+				<th>
+					Action
+				</th>
+				<th>
+					Description
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in Model)
+			{
+				<tr>
+					<td>
+						@item.User
+					</td>
+					<td>
+						@item.Date
+					</td>
+					<td>
+						@item.Action
+					</td>
+					<td>
+						@item.Description
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 </div>

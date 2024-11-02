@@ -1,5 +1,6 @@
 using Cyb_lab.Data;
 using Cyb_lab.Helpers;
+using Cyb_lab.Models;
 using Cyb_lab.Options;
 using Cyb_lab.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -307,6 +308,12 @@ public class AdminController : Controller
 
 	public IActionResult Logs()
 	{
+		//List<EventEntryViewModel> l = new();
+		//l.Add(new EventEntryViewModel { User="test1", Date=DateTime.Now, Action="t", Description="b"});
+		//l.Add(new EventEntryViewModel { User = "test12", Date = DateTime.Now, Action = "t", Description = "b" });
+		//l.Add(new EventEntryViewModel { User = "test14", Date = DateTime.Now, Action = "t", Description = "b" });
+		//l.Add(new EventEntryViewModel { User = "test3", Date = DateTime.Now, Action = "t", Description = "b" });
+		//l.Add(new EventEntryViewModel { User = "test4", Date = DateTime.Now, Action = "t", Description = "b" });
 		//get all logs from db
 		return View();
 	}
