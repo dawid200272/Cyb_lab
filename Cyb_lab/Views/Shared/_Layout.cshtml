@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using Cyb_lab.Options
+@using Microsoft.Extensions.Options
+@inject IOptionsMonitor<LockoutSettingsOptions> OptionsMonitor;
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -47,7 +51,7 @@
     <script>
         var inactivityTime = function () {
             const second = 1000;
-            var timeout = 60 * second;
+            var timeout = loadInactivityTime();
             var time;
             window.onload = resetTimer;
             // DOM Events
@@ -57,6 +61,8 @@
             document.onclick = resetTimer;
             document.onmousemove = resetTimer;
             document.onmousedown = resetTimer; // touchscreen presses
+
+            console.log(`timeout time: ${timeout}`);
 
             function logout() {
                 document.getElementById("logoutForm").submit();
@@ -68,6 +74,19 @@
                 clearTimeout(time);
                 time = setTimeout(logout, timeout)
                 // 1000 milliseconds = 1 second
+            }
+
+            function loadInactivityTime() {
+            @{
+                var inacTime = OptionsMonitor.CurrentValue.InactivityTime;
+
+                int hours = inacTime.Hours;
+                int minutes = inacTime.Minutes;
+                int seconds = inacTime.Seconds;
+
+                int time = (hours * 60 * 60) + (minutes * 60) + seconds;
+            }
+                return @time * second;
             }
         };
     </script>
