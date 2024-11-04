@@ -18,13 +18,20 @@ builder.Configuration
 	.AddEnvironmentVariables();
 
 var passwordPolicyOptionsConfig = builder.Configuration.GetSection(PasswordPolicyOptions.SectionName);
+var lockoutOptionsConfig = builder.Configuration.GetSection(LockoutSettingsOptions.SectionName);
 
 builder.Services.AddOptions<PasswordPolicyOptions>()
 	.Bind(passwordPolicyOptionsConfig)
 	.ValidateDataAnnotations()
 	.ValidateOnStart();
 
+builder.Services.AddOptions<LockoutSettingsOptions>()
+	.Bind(lockoutOptionsConfig)
+	.ValidateDataAnnotations()
+	.ValidateOnStart();
+
 var passwordPolicyOptions = passwordPolicyOptionsConfig.Get<PasswordPolicyOptions>();
+var lockoutSettingsOptions = lockoutOptionsConfig.Get<LockoutSettingsOptions>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -57,10 +64,15 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
-	// Default Lockout settings.
-	options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-	options.Lockout.MaxFailedAccessAttempts = 3;
-	options.Lockout.AllowedForNewUsers = true;
+	if (lockoutSettingsOptions is not null)
+	{
+		options.Lockout = new LockoutOptions()
+		{
+			DefaultLockoutTimeSpan = lockoutSettingsOptions.DefaultLockoutTimeSpan,
+			MaxFailedAccessAttempts = lockoutSettingsOptions.MaxFailedAccessAttempts,
+			AllowedForNewUsers = lockoutSettingsOptions.AllowedForNewUsers,
+		};
+	}
 });
 
 builder.Services.AddTransient<IPasswordHasher<ApplicationUser>, BCryptPasswordHasher<ApplicationUser>>();

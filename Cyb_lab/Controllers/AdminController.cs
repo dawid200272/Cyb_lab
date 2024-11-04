@@ -18,16 +18,19 @@ public class AdminController : Controller
 	private readonly IOptionsMonitor<IdentityOptions> _identityOptionsMonitor;
 	private readonly IOptionsMonitor<PasswordPolicyOptions> _passwordOptionsMonitor;
 	private readonly EventLogsService _eventLogsService;
+	private readonly IOptionsMonitor<LockoutSettingsOptions> _lockoutOptionsMonitor;
 
 	public AdminController(UserManager<ApplicationUser> userManager,
 		IOptionsMonitor<IdentityOptions> identityOptionsMonitor,
 		IOptionsMonitor<PasswordPolicyOptions> passwordOptionsMonitor,
-		EventLogsService eventLogsService)
+		EventLogsService eventLogsService,
+		IOptionsMonitor<LockoutSettingsOptions> lockoutOptionsMonitor)
 	{
 		_userManager = userManager;
 		_identityOptionsMonitor = identityOptionsMonitor;
 		_passwordOptionsMonitor = passwordOptionsMonitor;
 		_eventLogsService = eventLogsService;
+		_lockoutOptionsMonitor = lockoutOptionsMonitor;
 	}
 
 	public IActionResult Panel()
@@ -326,7 +329,7 @@ public class AdminController : Controller
 			Action = nameof(ChangePasswordPolicy),
 		};
 
-		UpdateJsonFile(viewModel);
+		UpdatePasswordOptionsInJsonFile(viewModel);
 
 		_userManager.Options.Password = new PasswordOptions()
 		{
@@ -345,7 +348,7 @@ public class AdminController : Controller
 		return RedirectToAction(nameof(Panel));
 	}
 
-	private void UpdateJsonFile(PasswordPolicyOptions newOptions)
+	private void UpdatePasswordOptionsInJsonFile(PasswordPolicyOptions newOptions)
 	{
 		var jsonObj = SettingsHelpers.GetDynamicJson();
 
@@ -370,6 +373,25 @@ public class AdminController : Controller
 		SettingsHelpers.WriteInAppSettings(jsonObj);
 	}
 
+	private void UpdateLockoutOptionsInJsonFile(LockoutSettingsOptions newOptions)
+	{
+		var jsonObj = SettingsHelpers.GetDynamicJson();
+
+		var key = LockoutSettingsOptions.SectionName;
+
+		#region Setting Values in jsonObj
+		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.DefaultLockoutTimeSpan)}", jsonObj, newOptions.DefaultLockoutTimeSpan);
+
+		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.MaxFailedAccessAttempts)}", jsonObj, newOptions.MaxFailedAccessAttempts);
+
+		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.AllowedForNewUsers)}", jsonObj, newOptions.AllowedForNewUsers);
+
+		SettingsHelpers.SetValueRecursively($"{key}:{nameof(newOptions.InactivityTime)}", jsonObj, newOptions.InactivityTime);
+		#endregion
+
+		SettingsHelpers.WriteInAppSettings(jsonObj);
+	}
+
 	[HttpGet]
 	public IActionResult Logs()
 	{
@@ -389,5 +411,53 @@ public class AdminController : Controller
 		}
 
 		return View(viewModel);
+	}
+
+	[HttpGet]
+	public IActionResult ChangeAccountSettings()
+	{
+		var lockoutOptions = _lockoutOptionsMonitor.CurrentValue;
+
+		var viewModel = new LockoutSettingsOptions()
+		{
+			DefaultLockoutTimeSpan = lockoutOptions.DefaultLockoutTimeSpan,
+			MaxFailedAccessAttempts = lockoutOptions.MaxFailedAccessAttempts,
+			AllowedForNewUsers = lockoutOptions.AllowedForNewUsers,
+			InactivityTime = lockoutOptions.InactivityTime,
+		};
+
+		return View(viewModel);
+	}
+
+	[HttpPost]
+	public IActionResult ChangeAccountSettings(LockoutSettingsOptions viewModel)
+	{
+		if (!ModelState.IsValid)
+		{
+			return View(viewModel);
+		}
+
+		var changeAccountSettingsEvent = new EventEntry()
+		{
+			UserId = null, // TODO: Add admin id here
+			User = null, // TODO: Add ref to admin here
+			Date = DateTime.UtcNow,
+			Action = nameof(ChangeAccountSettings),
+		};
+
+		UpdateLockoutOptionsInJsonFile(viewModel);
+
+		_userManager.Options.Lockout = new LockoutOptions()
+		{
+			DefaultLockoutTimeSpan = viewModel.DefaultLockoutTimeSpan,
+			MaxFailedAccessAttempts = viewModel.MaxFailedAccessAttempts,
+			AllowedForNewUsers = viewModel.AllowedForNewUsers,
+		};
+
+		changeAccountSettingsEvent.Description = "Account settings has been changed";
+
+		_eventLogsService.AddEntry(changeAccountSettingsEvent);
+
+		return RedirectToAction(nameof(Panel));
 	}
 }
