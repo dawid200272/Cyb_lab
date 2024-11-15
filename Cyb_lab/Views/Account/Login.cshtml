@@ -1,15 +1,36 @@
 ﻿@using Cyb_lab.ViewModels
 @model LoginViewModel
+@inject IConfiguration _configuration
 
 @{
 	ViewData["Title"] = "Login";
+	var siteKey = _configuration["CaptchaSettings:SiteKey"];
 }
+
+<script type="text/javascript">
+	var onloadCallback = function () {
+		grecaptcha.render('captcha_widget', {
+			'sitekey': '@siteKey',
+			'theme': 'dark'
+		});
+		grecaptcha.execute();
+	};
+
+	function onSubmit(event) {
+		var token = grecaptcha.getResponse();
+
+		document.getElementById('captchaTokenInputId').value = token;
+	}
+
+</script>
 
 <h1>@ViewData["Title"]</h1>
 
 <div class="row">
 	<div class="col-md-12">
-		<form method="post">
+		<form method="post" onsubmit="onSubmit(event)">
+			<input type="hidden" id="captchaTokenInputId" asp-for="CaptchaToken" />
+
 			<div asp-validation-summary="All" class="text-danger"></div>
 			<div class="form-group">
 				<label asp-for="UserName"></label>
@@ -21,7 +42,15 @@
 				<input asp-for="Password" class="form-control" />
 				<span asp-validation-for="Password" class="text-danger"></span>
 			</div>
+			<div class="form-group">
+				<hr />
+				<div id="captcha_widget"></div>
+				<hr />
+			</div>
 			<button type="submit" class="btn btn-primary">Login</button>
 		</form>
 	</div>
 </div>
+
+<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer>
+</script>

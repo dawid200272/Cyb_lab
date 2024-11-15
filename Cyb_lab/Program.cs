@@ -87,8 +87,11 @@ builder.Services.AddAuthorizationBuilder()
 	policy.RequireRole(UserRoles.User.ToString()));
 #endregion
 
+#region Services
 builder.Services.AddTransient<PasswordHistoryService>();
 builder.Services.AddTransient<EventLogsService>();
+builder.Services.AddTransient<CaptchaService>(); 
+#endregion
 
 var app = builder.Build();
 

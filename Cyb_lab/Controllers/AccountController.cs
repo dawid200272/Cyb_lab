@@ -18,6 +18,8 @@ public class AccountController : Controller
 	private readonly PasswordHistoryService _passwordHistoryService;
 	private readonly EventLogsService _eventLogsService;
 	private readonly IOptionsMonitor<PasswordPolicyOptions> _passwordOptionsMonitor;
+	private readonly CaptchaService _captchaService;
+	private readonly IConfiguration _configuration;
 
 	private const string _onetimePasswordFunctionString = "lg(a/x)";
 	private Func<int, int, double> _onetimePasswordFunction =
@@ -31,7 +33,9 @@ public class AccountController : Controller
 		UserManager<ApplicationUser> userManager,
 		PasswordHistoryService passwordHistoryService,
 		IOptionsMonitor<PasswordPolicyOptions> passwordOptionsMonitor,
-		EventLogsService eventLogsService)
+		EventLogsService eventLogsService,
+		CaptchaService captchaService,
+		IConfiguration configuration)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
@@ -41,6 +45,8 @@ public class AccountController : Controller
 
 		var time = DateTime.UtcNow.Second;
 		_random = new Random(time);
+		_captchaService = captchaService;
+		_configuration = configuration;
 	}
 
 	[HttpGet]
@@ -93,7 +99,7 @@ public class AccountController : Controller
 		var toggleOnetimePasswordEvent = new EventEntry()
 		{
 			UserId = null, // TODO: Add admin id here
-			User =  null, // TODO: Add ref to admin here
+			User = null, // TODO: Add ref to admin here
 			Date = DateTime.UtcNow,
 			Action = nameof(ToggleOnetimePassword),
 			Description = $"{nameof(user.OnetimePasswordEnabled)} property of user '{user.UserName}' has been set to '{user.OnetimePasswordEnabled}'",
@@ -119,6 +125,26 @@ public class AccountController : Controller
 		{
 			return View(viewModel);
 		}
+
+		if (string.IsNullOrWhiteSpace(viewModel.CaptchaToken))
+		{
+			ModelState.AddModelError(string.Empty, "Captcha token is missing");
+
+			return View(viewModel);
+		}
+
+		var secretKey = _configuration["CaptchaSettings:SecretKey"];
+
+		var captchaVerificationResult = await CaptchaService.VerifiyReCaptchaV2(viewModel.CaptchaToken, secretKey);
+
+		if (!captchaVerificationResult)
+		{
+			ModelState.AddModelError(string.Empty, "Invalid Captcha");
+
+			return View(viewModel);
+		}
+
+		Console.WriteLine($"Captcha token: {viewModel.CaptchaToken}");
 
 		var user = await _userManager.FindByNameAsync(viewModel.UserName);
 
@@ -159,7 +185,7 @@ public class AccountController : Controller
 
 		if (user.OnetimePasswordEnabled)
 		{
-			return RedirectToAction(nameof(OnetimePasswordLogin), new { userId = user.Id});
+			return RedirectToAction(nameof(OnetimePasswordLogin), new { userId = user.Id });
 		}
 
 		if (string.IsNullOrWhiteSpace(viewModel.Password))
