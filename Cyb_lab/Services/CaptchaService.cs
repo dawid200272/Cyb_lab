@@ -9,11 +9,6 @@ namespace Cyb_lab.Services;
 
 public class CaptchaService
 {
-	private IConfiguration _configuration;
-    public CaptchaService(IConfiguration iConfig)
-    {
-        _configuration = iConfig;
-    }
     public static async Task<bool> VerifiyReCaptchaV2(string response, string secret)
 	{
 		using var client = new HttpClient();
@@ -51,7 +46,7 @@ public class CaptchaService
 		return (bool)success;
 	}
 
-	public static async Task<bool> VerifyReCaptchaV3(string token, string secret)
+	public static async Task<bool> VerifyReCaptchaV3(string token, string secret, double acceptedScore)
 	{
 		try
 		{
@@ -69,7 +64,7 @@ public class CaptchaService
 
 				var result = JsonConvert.DeserializeObject<GoogleCaptchaV3Response>(responseString);
 
-				return result.success && result.score >= 0.5;
+				return result.success && result.score >= acceptedScore;
 			}
 		}
 		catch (Exception e)

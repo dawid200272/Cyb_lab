@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using System.Globalization;
 
 namespace Cyb_lab.Controllers;
 
@@ -285,9 +286,16 @@ public class AccountController : Controller
 	public async Task<IActionResult> ChangePassword(ChangePasswordViewModel viewModel)
 	{
 		var secret = _configuration["GoogleRecaptchav3:SecretKey"];
-		var acceptedScore = _configuration["GoogleRecaptchav3:AcceptedScore"];
+		var acceptedScoreString = _configuration["GoogleRecaptchav3:AcceptedScore"];
 
-		var captchaResult = await CaptchaService.VerifyReCaptchaV3(viewModel.Token, secret);
+		double acceptedScore = 0.5;
+
+		if (double.TryParse(acceptedScoreString, NumberStyles.Number, CultureInfo.InvariantCulture, out double r))
+		{
+			acceptedScore = r;
+		}
+
+		var captchaResult = await CaptchaService.VerifyReCaptchaV3(viewModel.Token, secret, acceptedScore);
 		if (!captchaResult)
 		{
 			ModelState.AddModelError(string.Empty, "Did not passed reCaptchaV3");
