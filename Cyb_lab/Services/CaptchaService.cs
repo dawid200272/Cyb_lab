@@ -1,10 +1,20 @@
-﻿using System.Text.Json.Nodes;
+﻿using Azure;
+using Cyb_lab.Models;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using System.Text.Json.Nodes;
 
 namespace Cyb_lab.Services;
 
 public class CaptchaService
 {
-	public static async Task<bool> VerifiyReCaptchaV2(string response, string secret)
+	private IConfiguration _configuration;
+    public CaptchaService(IConfiguration iConfig)
+    {
+        _configuration = iConfig;
+    }
+    public static async Task<bool> VerifiyReCaptchaV2(string response, string secret)
 	{
 		using var client = new HttpClient();
 
@@ -39,5 +49,32 @@ public class CaptchaService
 		}
 
 		return (bool)success;
+	}
+
+	public static async Task<bool> VerifyReCaptchaV3(string token, string secret)
+	{
+		try
+		{
+			var url = $"https://www.google.com/recaptcha/api/siteverify?secret={secret}&response={token}";
+
+			using (var client = new HttpClient())
+			{
+				var httpResult = await client.GetAsync(url);
+				if(httpResult.StatusCode != System.Net.HttpStatusCode.OK)
+				{
+					return false;
+				}
+
+				var responseString = await httpResult.Content.ReadAsStringAsync();
+
+				var result = JsonConvert.DeserializeObject<GoogleCaptchaV3Response>(responseString);
+
+				return result.success && result.score >= 0.5;
+			}
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
 	}
 }

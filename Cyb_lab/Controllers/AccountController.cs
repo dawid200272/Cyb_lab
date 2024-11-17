@@ -284,6 +284,17 @@ public class AccountController : Controller
 	[HttpPost]
 	public async Task<IActionResult> ChangePassword(ChangePasswordViewModel viewModel)
 	{
+		var secret = _configuration["GoogleRecaptchav3:SecretKey"];
+		var acceptedScore = _configuration["GoogleRecaptchav3:AcceptedScore"];
+
+		var captchaResult = await CaptchaService.VerifyReCaptchaV3(viewModel.Token, secret);
+		if (!captchaResult)
+		{
+			ModelState.AddModelError(string.Empty, "Did not passed reCaptchaV3");
+			return View();
+		}
+
+
 		if (!ModelState.IsValid)
 		{
 			return View(viewModel);
