@@ -298,7 +298,7 @@ public class AccountController : Controller
 		var captchaResult = await CaptchaService.VerifyReCaptchaV3(viewModel.Token, secret, acceptedScore);
 		if (!captchaResult)
 		{
-			ModelState.AddModelError(string.Empty, "Did not passed reCaptchaV3");
+			ModelState.AddModelError(string.Empty, "reCaptchaV3 test failed");
 			return View();
 		}
 
