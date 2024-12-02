@@ -13,6 +13,11 @@ public static class VigenereCipher
 	{
 		int textLength = plainText.Length;
 
+		if (key.Length >= textLength)
+		{
+			return key;
+		}
+
 		for (int i = 0; ; i++)
 		{
 			if (i == textLength)
@@ -30,14 +35,14 @@ public static class VigenereCipher
 		return key;
 	}
 
-    /// <summary>
-    /// This function returns the encrypted text
-    /// generated with the help of the key
-    /// </summary>
-    /// <param name="plainText"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    public static string Encrypt(string plainText, string key)
+	/// <summary>
+	/// This function returns the encrypted text
+	/// generated with the help of the key
+	/// </summary>
+	/// <param name="plainText"></param>
+	/// <param name="key"></param>
+	/// <returns></returns>
+	public static string Encrypt(string plainText, string key)
 	{
 		string cipheredText = string.Empty;
 
@@ -57,14 +62,14 @@ public static class VigenereCipher
 		return cipheredText;
 	}
 
-    /// <summary>
-    /// This function decrypts the encrypted text
-    /// and returns the original text
-    /// </summary>
-    /// <param name="cipheredText"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    public static string Decrypt(string cipheredText, string key)
+	/// <summary>
+	/// This function decrypts the encrypted text
+	/// and returns the original text
+	/// </summary>
+	/// <param name="cipheredText"></param>
+	/// <param name="key"></param>
+	/// <returns></returns>
+	public static string Decrypt(string cipheredText, string key)
 	{
 		string plainText = string.Empty;
 
