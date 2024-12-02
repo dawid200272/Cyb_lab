@@ -2,6 +2,27 @@
     ViewData["Title"] = "ActivateLicense";
 }
 
+@using Cyb_lab.ViewModels
+@model ActivateLicenseViewModel
+
 <div class="text-center">
     <h1 class="display-4">@ViewData["Title"]</h1>
+
+	@if (Model.IsLicenseActivated)
+	{
+		<p>License is activated for this account</p>
+	}
+	else
+	{
+		<p>Activate license</p>
+		<form method="post">
+			<div asp-validation-summary="All" class="text-danger"></div>
+			<div class="form-group">
+				<label asp-for="Key"></label>
+				<input asp-for="Key" class="form-control" />
+				<span asp-validation-for="Key" class="text-danger"></span>
+			</div>
+			<button type="submit" class="btn btn-primary">Login</button>
+		</form>
+	}
 </div>

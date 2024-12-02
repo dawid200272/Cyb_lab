@@ -1,4 +1,5 @@
-﻿using Cyb_lab.Data;
+﻿using Cyb_lab.Ciphers;
+using Cyb_lab.Data;
 using Cyb_lab.Models;
 using Cyb_lab.Options;
 using Cyb_lab.Services;
@@ -466,6 +467,42 @@ public class AccountController : Controller
 
     public async Task<IActionResult> ActivateLicense()
 	{
-		return View();
+		var user = await _userManager.GetUserAsync(User);
+		var vm = new ActivateLicenseViewModel()
+		{
+			IsLicenseActivated = user.LicenseActivated
+		};
+
+        return View(vm);
 	}
+
+    [HttpPost]
+    public async Task<IActionResult> ActivateLicense(ActivateLicenseViewModel vm)
+	{
+        var user = await _userManager.GetUserAsync(User);
+		if (!LicenseCheck(vm.Key.ToUpper()))
+		{
+            ModelState.AddModelError(string.Empty, "Invalid license key");
+            return View(vm);
+		};
+
+		user.LicenseActivated = true;
+		await _userManager.UpdateAsync(user);
+
+		return View(vm);
+    }
+
+    private bool LicenseCheck(string key)
+    {
+		const string licenseText = "LICENSEKEY";
+		const string cypherKey = "SUNTINGWONG";
+		string generatedKey = VigenereCipher.GenerateKey(key, cypherKey);
+		string decryptedText = VigenereCipher.Decrypt(key, generatedKey);
+
+		if (decryptedText == licenseText)
+		{
+            return true;
+        }
+        return false;
+    }
 }
