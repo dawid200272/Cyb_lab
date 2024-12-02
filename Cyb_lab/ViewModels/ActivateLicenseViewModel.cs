@@ -1,8 +1,7 @@
-﻿namespace Cyb_lab.ViewModels
+﻿namespace Cyb_lab.ViewModels;
+
+public class ActivateLicenseViewModel
 {
-    public class ActivateLicenseViewModel
-    {
-        public string Key { get; set; }
-        public bool IsLicenseActivated { get; set; }
-    }
+	public string ActivationKey { get; set; }
+	public bool IsLicenseActivated { get; set; }
 }

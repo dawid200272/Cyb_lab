@@ -465,7 +465,7 @@ public class AccountController : Controller
 		await _userManager.UpdateAsync(user);
 	}
 
-    public async Task<IActionResult> ActivateLicense()
+	public async Task<IActionResult> ActivateLicense()
 	{
 		var user = await _userManager.GetUserAsync(User);
 		var vm = new ActivateLicenseViewModel()
@@ -473,36 +473,37 @@ public class AccountController : Controller
 			IsLicenseActivated = user.LicenseActivated
 		};
 
-        return View(vm);
+		return View(vm);
 	}
 
-    [HttpPost]
-    public async Task<IActionResult> ActivateLicense(ActivateLicenseViewModel vm)
+	[HttpPost]
+	public async Task<IActionResult> ActivateLicense(ActivateLicenseViewModel vm)
 	{
-        var user = await _userManager.GetUserAsync(User);
-		if (!LicenseCheck(vm.Key.ToUpper()))
+		var user = await _userManager.GetUserAsync(User);
+		if (!LicenseCheck(vm.ActivationKey.ToUpper()))
 		{
-            ModelState.AddModelError(string.Empty, "Invalid license key");
-            return View(vm);
-		};
+			ModelState.AddModelError(string.Empty, "Invalid license key");
+			return View(vm);
+		}
 
 		user.LicenseActivated = true;
 		await _userManager.UpdateAsync(user);
 
 		return View(vm);
-    }
+	}
 
-    private bool LicenseCheck(string key)
-    {
+	private bool LicenseCheck(string activationKey)
+	{
 		const string licenseText = "LICENSEKEY";
 		const string cypherKey = "SUNTINGWONG";
-		string generatedKey = VigenereCipher.GenerateKey(key, cypherKey);
-		string decryptedText = VigenereCipher.Decrypt(key, generatedKey);
+
+		string generatedKey = VigenereCipher.GenerateKey(activationKey, cypherKey);
+		string decryptedText = VigenereCipher.Decrypt(activationKey, generatedKey);
 
 		if (decryptedText == licenseText)
 		{
-            return true;
-        }
-        return false;
-    }
+			return true;
+		}
+		return false;
+	}
 }
