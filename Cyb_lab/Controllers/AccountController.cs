@@ -463,4 +463,9 @@ public class AccountController : Controller
 
 		await _userManager.UpdateAsync(user);
 	}
+
+    public async Task<IActionResult> ActivateLicense()
+	{
+		return View();
+	}
 }

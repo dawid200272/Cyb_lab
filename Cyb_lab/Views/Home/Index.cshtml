@@ -5,6 +5,8 @@
 <div class="text-center">
     <h1 class="display-4">Main page</h1>
     
+    <a asp-controller="Home" asp-action="ShowFiles">Show files</a>
+
     @* Only user with admin role sees this *@
     @if (User.IsInRole("Administrator"))
     {
