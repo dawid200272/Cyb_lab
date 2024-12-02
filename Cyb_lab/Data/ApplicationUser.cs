@@ -8,6 +8,8 @@ public class ApplicationUser : IdentityUser
 	public bool FirstLogin { get; set; } = true;
 	public bool Disabled { get; set; } = false;
 
+	public bool LicenseActivated { get; set; } = false;
+
 	public bool OnetimePasswordEnabled { get; set; }
 	public double? OnetimePasswordValue { get; set; } = null;
 
